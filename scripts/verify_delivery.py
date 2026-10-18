@@ -116,6 +116,33 @@ def free_port() -> int:
         return listener.getsockname()[1]
 
 
+def read_model_evaluation_report(stdout: Path, previous: set[str], root: Path = PROJECT_ROOT) -> tuple[Path, dict]:
+    output = json.loads(stdout.read_text(encoding="utf-8"))
+    path = (root / output["report_path"]).resolve()
+    report_root = (root / ".local/model-evals").resolve()
+    if (not path.is_relative_to(report_root) or path.name != "report.json" or path.parent.parent != report_root
+            or path.parent.name in previous):
+        raise ValueError("Model evaluator must produce a new isolated report")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    fixture = (root / "evals/model_cases.json").read_bytes()
+    responses = (root / "evals/model_responses.json").read_bytes()
+    cases = json.loads(fixture)["cases"]
+    ids = [case["id"] for case in cases]
+    if (report != output or report.get("schema_version") != 1 or report.get("stage") != 9
+            or report.get("passed") is not True or report.get("mode") != "fixture_replay" or report.get("adapter") != "response_replay"
+            or report.get("model_quality_claim") is not False or type(report.get("live_model_requests")) is not int or report["live_model_requests"] != 0
+            or report.get("model_cost", 0) is not None or report.get("model_latency_ms", 0) is not None
+            or report.get("case_sha256") != hashlib.sha256(fixture).hexdigest()
+            or report.get("responses_sha256") != hashlib.sha256(responses).hexdigest()
+            or report.get("task_count") != len(ids) or report.get("evaluated_count") != len(ids)
+            or [row.get("id") for row in report.get("results", [])] != ids
+            or not all(row.get("passed") is True for row in report["results"])
+            or report.get("metrics", {}).get("task_success", {}).get("numerator") != len(ids)
+            or report.get("metrics", {}).get("task_success", {}).get("denominator") != len(ids)):
+        raise ValueError("Model evaluator report is incomplete, failed or not offline fixture replay")
+    return path, report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--confirm", action="store_true", help="Approve local isolated verification files and synthetic workflow writes")
@@ -170,6 +197,12 @@ def main() -> int:
                               "-o", "pythonpath=backend", "--basetemp", str(directory / "pytest-temp"),
                               "--junitxml", str(directory / "pytest.xml")], 600)
         run("frontend_build", [npm, "--prefix", "frontend", "run", "build"], 180)
+        model_root = PROJECT_ROOT / ".local/model-evals"
+        previous_models = {path.name for path in model_root.iterdir()} if model_root.exists() else set()
+        model_output = run("model_response_replay", [sys.executable, "scripts/run_model_evals.py", "--confirm"], 60)
+        model_path, model_report = read_model_evaluation_report(model_output, previous_models)
+        report["model_evaluation"] = {"report": str(model_path.relative_to(PROJECT_ROOT)), "passed": True,
+                                      "task_count": model_report["task_count"], "mode": "fixture_replay", "live_model_requests": 0}
         eval_root = PROJECT_ROOT / ".local/evals"
         previous = {path.name for path in eval_root.iterdir()} if eval_root.exists() else set()
         output = run("golden_tasks", [sys.executable, "scripts/run_evals.py", "--confirm"], 600)

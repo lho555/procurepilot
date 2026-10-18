@@ -6,6 +6,7 @@ import AgentQuery from './AgentQuery'
 import ApprovalQueue from './ApprovalQueue'
 import DurableWorkflow from './DurableWorkflow'
 import Evaluation from './Evaluation'
+import ModelEvaluation from './ModelEvaluation'
 
 type Health = { status: 'ok'; service: string; stage: number }
 
@@ -71,6 +72,7 @@ export default function App() {
         { key: 'business', label: '业务查询', children: <BusinessQuery /> },
         { key: 'knowledge', label: '制度证据', children: <KnowledgeQuery /> },
         { key: 'evaluation', label: 'Evaluation', children: <Evaluation /> },
+        { key: 'model-evaluation', label: '模型验收', children: <ModelEvaluation /> },
       ]} />
     </main>
   )

@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+  "responses": [
+    {
+      "id": "shortage_and_delay",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "shortage_only",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delay_only",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "healthy_order",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"MONITOR\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing_policy",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "forged_fact",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"imagined\"], \"citation_numbers\": [1], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown_citation",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [99], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "unauthorized_code",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"EXECUTE_NOW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "truncated",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "length",
+            "message": {
+              "role": "assistant",
+              "content": "{\"finding_ids\": [\"stock:1\", \"delivery\"], \"citation_numbers\": [1], \"recommendations\": [\"COMPARE_SUPPLIERS\", \"VERIFY_DELIVERY\", \"HUMAN_REVIEW\"]}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "refusal",
+      "event": "completion",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "message": {
+              "role": "assistant",
+              "content": null,
+              "refusal": "Synthetic refusal"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "timeout",
+      "event": "timeout"
+    },
+    {
+      "id": "provider_unavailable",
+      "event": "http_error",
+      "status": 503
+    }
+  ]
+}

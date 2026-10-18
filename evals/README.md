@@ -18,3 +18,9 @@ Stage 7：17 条固定 Golden Tasks，真实 API / stdio MCP，隔离 SQLite，�
 范围是 Mock 合成确定性工作流，不能冒充真实 LLM 的自主选工具 / 推理质量、生产安全或泛化能力。
 恢复场景使用应用层 checkpoint；已保存分析不重跑，未保存的分析内部续跑仍未实现。
 Stage 8 工作台已支持浏览器内导入报告；不上传、不执行评测，也不认证报告真实性。
+
+## Stage 9 模型响应回放
+
+`scripts/run_model_evals.py --confirm` 使用 `model_cases.json` 与摘要绑定的 `model_responses.json`，复用实际模型适配器，只使用 HTTPX 本地响应替身。12 个合成案例覆盖事实 / 引用 / 建议及失败边界；`--responses <文件>` 可回放同题集的完整本地响应记录。
+
+`model_replay.py` 按固定标注计分，适用失败保留在分母；报告不包含原始响应或错误文本。没有真实模型调用，不读取模型凭据；本地回放时延不能解释为模型时延，模型费用保留未测量。报告在独立的“模型验收”页导入，Stage 7 报告入口保持不变。详见 [模型验收说明](../docs/MODEL_EVALUATION.md)。
