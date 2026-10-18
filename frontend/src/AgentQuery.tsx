@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, Button, Card, Input, Space, Table, Tag, Typography } from 'antd'
+import AnalysisMode from './AnalysisMode'
 
 type Trace = { step: string; tool: string | null; transport?: string; arguments: Record<string, string>; attempt: number; status: string; duration_ms: number; error: string | null }
 type Citation = { number: number; title: string; filename: string; section: string; start_line: number; end_line: number; excerpt: string }
@@ -28,14 +29,15 @@ export default function AgentQuery() {
     finally { setLoading(false) }
   }
 
-  return <Card title="订单协同分析" extra={<Tag color="purple">Stage 4 · MCP / 只读 / Mock</Tag>} style={{ marginTop: 24 }}>
+  return <Card title="订单协同分析" extra={<Tag color="purple">只读分析</Tag>} style={{ marginTop: 24 }}>
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
-      <Typography.Paragraph type="secondary">通过本机 MCP 查询订单、库存与供应商，并检索制度。当前使用离线 Mock adapter，不调用真实模型，不保存草稿或执行采购。运行记录仅保留在当前响应中。</Typography.Paragraph>
+      <Typography.Paragraph type="secondary">查询订单、库存与供应商并检索制度，默认离线分析。服务端显式启用模型后，仅发送合成事实与制度摘录，校验依据后展示建议。运行方式在结果中标识；此入口不保存草稿或执行采购。</Typography.Paragraph>
       <Input.TextArea aria-label="订单分析问题" value={query} onChange={event => setQuery(event.target.value)} rows={3} maxLength={1000} disabled={loading} />
       <Button type="primary" loading={loading} onClick={() => void analyze()}>运行只读分析</Button>
       {loading && <Typography.Text role="status">正在查询关联事实和制度，最多等待 25 秒…</Typography.Text>}
       {error && <Alert role="alert" type="error" showIcon title={error} />}
       {result && <>
+        <AnalysisMode adapter={result.adapter} />
         <Alert type={result.status === 'COMPLETED' ? 'success' : 'warning'} showIcon
           title={`分析状态：${result.status}`} description={result.error || `${result.run_id} · ${result.tool_calls.length} 次读取调用`} />
         <Typography.Title level={5}>Final Result · 分析结论</Typography.Title>

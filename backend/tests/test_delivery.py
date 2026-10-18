@@ -18,6 +18,7 @@ def test_delivery_environment_does_not_inherit_business_secrets_or_imports(tmp_p
     assert env["RAG_INDEX_PATH"] == str(tmp_path / "unused-index.json")
     assert env["PYTHONPATH"] == os.pathsep.join([str(tmp_path / "backend"), str(tmp_path)])
     assert env["PYTHONNOUSERSITE"] == "1"
+    assert env["PP_LLM_MODE"] == "offline"
     assert all(name not in env for name in ["OPENAI_API_KEY", "LANGSMITH_API_KEY", "VITE_API_KEY", "HTTP_PROXY"])
 
 

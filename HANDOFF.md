@@ -1,5 +1,26 @@
 # 开发交接
 
+## Stage 9 第一切片：受控接口与离线验收（2026-10-18）
+
+- 当前分支 `feature/controlled-model-analysis`；从公开 main 创建后，快进包含交付复现基础的 `20cfbeb`，本切片依赖 PR #1。main 没有合并，原私人历史没有导入公开开发仓库。
+- 新增 `backend/app/model_explanation.py`：专用双开关、受限服务地址、最小事实目录、严格 JSON 选择与确定性渲染。独立分析和持久工作流通过同一工厂创建适配器；失败配置只影响新的分析，不阻塞已有 checkpoint 的审批 / 恢复。
+- 模型最多一次请求，不自动重试或降级，隐藏原始服务错误；保留确定性事实与安全失败原因。缺少制度、错误引用、虚构 / 遗漏事实、越权代码、工具调用、拒答、截断、超限和超时均不会创建草稿。模型输入不含用户原问题、联系方式、草稿或审批人。详细边界见 [MODEL_ANALYSIS](docs/MODEL_ANALYSIS.md)。
+- 页面标明运行模式，并展示持久分析失败原因；去除首页硬编码“离线 Mock”，保持合成数据和本地执行事实边界。统一 CLI、评测 API 子进程和 pytest 显式固定离线模式，不因 `.env` 配置触发真实模型。
+
+### 本轮验证
+
+- 首轮针对性命令运行 `backend/tests/test_model_explanation.py` 与 `backend/tests/test_agent.py`，56 项通过；随后新增的取消清理用例随完整验收通过。
+- `./.venv/Scripts/python.exe scripts/verify_delivery.py --confirm` 全部通过：158 项后端测试、前端类型检查与构建、17/17 Golden Tasks、3 项 HTTP 启动检查。未修改锁定依赖、业务审批接口、数据库结构或生产配置。
+- 原始报告 `.local/delivery/4a7ecf44bcdf443f8c757816674d8526/report.json`；可公开摘要 [model-analysis-20261018.json](docs/evidence/model-analysis-20261018.json)。验收时 HEAD 为 `20cfbeb`，本次工作区运行源码摘要为 `e6e1bf5328431d5cb7626beea6cc0d3ba1d2646551cbe1b98d06a3ad44f914b0`，不是把旧提交冒充本次代码。
+- Playwright 本机缓存 Chromium 的 4 项检查通过：真实离线 API 分析；用浏览器本地响应替身验证模型成功模式、模型失败状态和持久失败原因 / 执行禁用。报告 `.local/model-ui/report.json`，脚本 `.local/model-ui/check.js`，截图仅在本地。默认 Chrome 不存在，改用已安装 Chromium，没有安装或下载浏览器。没有页面脚本异常；favicon 404 为既有资源请求，不影响业务验收。
+- 所有本轮启动的 API / Vite / 浏览器均已关闭。新增模型测试使用 HTTPX 响应替身，未访问真实模型、现有密钥或付费服务。改动文本的个人路径 / 邮箱 / 常见凭据规则与文档链接检查通过，公开提交继续使用 noreply 邮箱。
+
+### 待办与限制
+
+真实提供方 / 模型 / 数据范围 / 费用尚待确认，本切片不代表真实模型理解质量或任意兼容服务已验证。引用只核对存在性，不能证明制度适用性；受限 JSON 选择不能代替开放式推理。分析 checkpoint 提交前崩溃、人工重跑或失败后恢复可能再次计费，不承诺模型计费幂等或账户总预算控制。
+
+沿用已获推送和写入授权提交功能分支及 PR，远端结果以该 PR 对应提交为准；不合并 main、不触发在线模型调用。模型质量验证完成前不启动下一业务切片。前端体积警告、最低版本、macOS、本轮 MySQL、身份与生产权限等原限制继续保留。下方为上一切片历史。
+
 ## 跨平台 CI 已通过，PR 待审阅（2026-10-18）
 
 - 已获用户明确授权，推送 `chore/reproducible-delivery` 并创建 [PR #1](https://github.com/lho555/procurepilot/pull/1)，未合并 main。

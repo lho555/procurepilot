@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Alert, Button, Card, Input, InputNumber, Modal, Space, Table, Tag, Typography } from 'antd'
+import AnalysisMode from './AnalysisMode'
 
 type Run = { id: string; status: string; phase: string; request_id: string | null; revision?: number; busy?: boolean;
   request?: { request: { sku: string; supplier_id: string; quantity: number; reason: string } } | null;
-  state?: { analysis?: { run_id: string; final_answer: string }; action?: { reference: string }; error?: string };
+  state?: { analysis?: { run_id: string; adapter?: string; final_answer: string; error?: string | null }; action?: { reference: string }; error?: string };
   checkpoints?: { revision: number; phase: string; status: string }[] }
 type Operation = 'start' | 'resume' | 'execute'
 
@@ -84,6 +85,8 @@ export default function DurableWorkflow() {
       {run && <>
         <Alert type={run.status === 'COMPLETED' ? 'success' : 'info'} title={`工作流状态：${run.status}`} description={`${run.id} · ${run.phase} · checkpoint ${run.revision} · 申请 ${run.request_id || '尚未创建'}`} />
         {run.state?.error && <Alert type="warning" title={run.state.error} />}
+        {run.state?.analysis && <AnalysisMode adapter={run.state.analysis.adapter} />}
+        {run.state?.analysis?.error && <Alert type="warning" title={run.state.analysis.error} />}
         <Typography.Paragraph style={{ whiteSpace: 'pre-wrap' }}>{run.state?.analysis?.final_answer}</Typography.Paragraph>
         <Space>
           <Button disabled={busy || operation !== null || !run.id || terminal || run.busy} onClick={() => { setError(null); setOperation('resume') }}>恢复运行</Button>

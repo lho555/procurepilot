@@ -15,7 +15,8 @@ from app.config import PROJECT_ROOT
 class LocalAPI:
     def __init__(self, directory, database_url, knowledge_path):
         self.directory = directory
-        self.env = {**os.environ, "DATABASE_URL": database_url, "RAG_INDEX_PATH": str(knowledge_path)}
+        self.env = {key: value for key, value in os.environ.items() if not key.upper().startswith("PP_LLM_")}
+        self.env.update(DATABASE_URL=database_url, RAG_INDEX_PATH=str(knowledge_path), PP_LLM_MODE="offline")
         self.opener = build_opener(ProxyHandler({}))
         self.process = None
         self.log = (directory / "api.log").open("a", encoding="utf-8")
