@@ -1,5 +1,13 @@
 # 开发交接
 
+## 跨平台 CI 已通过，PR 待审阅（2026-10-18）
+
+- 已获用户明确授权，推送 `chore/reproducible-delivery` 并创建 [PR #1](https://github.com/lho555/procurepilot/pull/1)，未合并 main。
+- 代码提交 `d4bfd94` 的 [CI 第 1 轮](https://github.com/lho555/procurepilot/actions/runs/39088666148) 已完成：Windows / Ubuntu 均为 success，安装、统一验收和结果上传通过，无失败步骤。
+- 远端工作流摘要与 artifact ID / 摘要见 [ci-delivery-20261018.json](docs/evidence/ci-delivery-20261018.json)。构件保留 7 天；不包含数据库、原始业务响应或凭据。
+- 本次结果记录更新仅涉及文档、证据和 SHA256SUMS，运行源码保持与已通过的本地验收一致。更新提交会自动再触发 PR CI，最终状态以 PR 检查为准，不将首轮结果冒充其他提交的运行。
+- 当前交付复现切片已完成跨平台验证；下一步先审阅本 PR，再安排 Stage 9。最低版本、macOS、15 分钟启动及本轮 MySQL 仍未验证。下方保留此前本地验收时点的记录。
+
 ## 交付复现基础：本地验收完成（2026-10-18）
 
 分支：`chore/reproducible-delivery`，基于公开 `main` 的 `414085d`，没有导入私人工作区历史。Stage 0～8 业务能力保持不变；Stage 9 尚未启动。
