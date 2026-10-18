@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-18",
+  "repository": "lho555/procurepilot",
+  "pull_request": "https://github.com/lho555/procurepilot/pull/1",
+  "head_commit": "d4bfd949fd5b62e8d2878b733c497023047e8f29",
+  "workflow_run_id": 39088666148,
+  "workflow_url": "https://github.com/lho555/procurepilot/actions/runs/39088666148",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "verify (windows-latest)",
+      "job_id": 117560493110,
+      "conclusion": "success",
+      "artifact_id": 12121124020,
+      "artifact_digest": "sha256:fb6a6ebf9b39e0a286e78fdb6c0dfb222f13008677628f3245c505b544663a1f"
+    },
+    {
+      "name": "verify (ubuntu-latest)",
+      "job_id": 117560493311,
+      "conclusion": "success",
+      "artifact_id": 12122280644,
+      "artifact_digest": "sha256:f45c498ac0c888332095eab68e357aa6541352c4b958813e1047981796bdb57d"
+    }
+  ],
+  "configured_environment": {
+    "python": "3.14",
+    "node": "24"
+  },
+  "scope": "Hosted Windows and Ubuntu workflow; no production systems, model keys or paid model requests.",
+  "artifact_retention_days": 7,
+  "local_verification": "delivery-20261018.json",
+  "main_merged": false,
+  "limitations": [
+    "Minimum runtime versions and macOS not verified.",
+    "No 15-minute startup guarantee or current MySQL verification.",
+    "HTTP startup check does not replace complete browser approval validation.",
+    "Existing frontend chunk warning retained."
+  ]
+}
