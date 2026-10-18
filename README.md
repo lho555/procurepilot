@@ -58,5 +58,6 @@ cd procurepilot
 - [工程取舍与当前边界](docs/KNOWN_LIMITATIONS.md)
 - [贡献与 AI 辅助说明](docs/CONTRIBUTIONS.md)
 - [数据来源与许可](docs/DATA_AND_LICENSE.md)
+- [开发与交付验证](docs/DEVELOPMENT.md)
 
 当前版本使用合成业务数据，分析采用固定编排与离线适配器，执行结果保存在本地；尚未连接外部模型或生产业务系统。适合本地运行、流程讲解与工程实现展示。

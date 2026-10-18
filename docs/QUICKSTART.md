@@ -10,7 +10,15 @@ python -m venv .venv
 npm --prefix frontend ci
 ```
 
-本次发布复核复用了已有锁定依赖，未在无缓存机器上重新下载安装，也未验证“15 分钟启动”。
+首次发布复核复用了已有依赖。后续独立安装和运行结果见 [开发交接](../HANDOFF.md)；新虚拟环境及空缓存安装不等于全新操作系统或“15 分钟启动”验证。
+
+## 安装后的统一检查
+
+```powershell
+./.venv/Scripts/python.exe scripts/verify_delivery.py --confirm
+```
+
+该命令依次检查依赖、后端、前端、业务闭环与服务启动链路，保存本次独立结果，并清理自己启动的服务。详细范围与 CI 说明见 [开发与交付验证](DEVELOPMENT.md)。
 
 ## 一条命令验收闭环
 
