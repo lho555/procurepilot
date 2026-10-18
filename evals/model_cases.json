@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "shortage_and_delay",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "accepted",
+        "applicable_citations": [
+          1
+        ],
+        "required_recommendations": [
+          "COMPARE_SUPPLIERS",
+          "VERIFY_DELIVERY",
+          "HUMAN_REVIEW"
+        ]
+      }
+    },
+    {
+      "id": "shortage_only",
+      "required": 100,
+      "available": 22,
+      "delay_days": 0,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足时可查询替代供应商报价、起订量与交期，结果须人工复核。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "accepted",
+        "applicable_citations": [
+          1
+        ],
+        "required_recommendations": [
+          "COMPARE_SUPPLIERS",
+          "HUMAN_REVIEW"
+        ]
+      }
+    },
+    {
+      "id": "delay_only",
+      "required": 100,
+      "available": 100,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "交付延期时应联系供应商核实交期和交付数量，并交由人工复核。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "accepted",
+        "applicable_citations": [
+          1
+        ],
+        "required_recommendations": [
+          "VERIFY_DELIVERY",
+          "HUMAN_REVIEW"
+        ]
+      }
+    },
+    {
+      "id": "healthy_order",
+      "required": 100,
+      "available": 100,
+      "delay_days": 0,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存与交期均满足当前订单时，不据此新增采购，继续观察实际库存和交期。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "accepted",
+        "applicable_citations": [
+          1
+        ],
+        "required_recommendations": [
+          "MONITOR"
+        ]
+      }
+    },
+    {
+      "id": "missing_policy",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "forged_fact",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "unknown_citation",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "unauthorized_code",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "truncated",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "refusal",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    },
+    {
+      "id": "timeout",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "timed_out"
+      }
+    },
+    {
+      "id": "provider_unavailable",
+      "required": 100,
+      "available": 22,
+      "delay_days": 2,
+      "citations": [
+        {
+          "number": 1,
+          "excerpt": "库存不足且交付延期时，应核实替代供应商与交期；追加采购必须由人工审批。"
+        },
+        {
+          "number": 2,
+          "excerpt": "资产报废应填写报废清单，本条不用于采购补货或交期核实。"
+        }
+      ],
+      "expected": {
+        "outcome": "rejected"
+      }
+    }
+  ]
+}

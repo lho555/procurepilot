@@ -1,5 +1,27 @@
 # 开发交接
 
+## Stage 9 第二切片：响应回放评分与报告展示（2026-10-18）
+
+- 分支 `feature/model-evaluation`：从公开 main 创建后快进到 `d7bdc64`，本切片依赖 PR #2；main 不自动合并，私人历史不导入公开仓库。
+- 新增 `evals/model_replay.py`、12 个固定合成案例及摘要绑定的响应文件，复用实际适配器与本地 HTTP 响应替身。支持 `scripts/run_model_evals.py --confirm`，或显式提供 `--responses <本地文件>`；只写新的 `.local/model-evals/<ID>/`，输入错误在写入前拒绝，失败返回非零。
+- 事实约束、引用符合题集标注、建议覆盖、失败处理与意外采纳分别计分。不适用项为 null，适用失败保留在分母。报告仅输出受限编号、建议代码和检查，不保留原始响应或原始错误，不读取模型凭据、不访问模型服务。
+- 新增“模型验收”页，浏览器内读取报告并重算聚合一致性；拒绝不一致分数与在线运行声明。没有预填成绩，模型时延与费用均为未测量。详细边界和命令见 [MODEL_EVALUATION](docs/MODEL_EVALUATION.md)。
+
+### 本轮实际验收
+
+- 21 项新增针对性测试通过：正确回放、存在却不适用的引用、遗漏建议、失败分母、意外采纳、错题集摘要 / 重复 / 缺失记录、超限输入、报告脱敏、CLI 确认 / 退出码及统一入口拒绝旧 / 失败 / 在线声明报告。
+- 最终 `./.venv/Scripts/python.exe scripts/verify_delivery.py --confirm` 通过：179 项后端测试，12/12 模型回放案例，17/17 Golden Tasks，前端类型检查与构建，以及 3 项 HTTP 启动检查。没有依赖升级、数据库迁移或业务审批接口变更。
+- 最终报告 `.local/delivery/8d27596ae8a94d1da64cb42f6e0896bd/report.json`；验收时 HEAD 为 `d7bdc64`，本次运行源码摘要 `fd6f83ee2ddd276a8402678456cf460649e7bd2880bfd0cd4a6dd23ac3f4bf4f`。可公开且可导入页面的示例报告：[model-evaluation-20261018.json](docs/evidence/model-evaluation-20261018.json)，附脱敏交付验证摘要。
+- Playwright 使用已缓存 Chromium，6 项浏览器检查通过：空态无预设成绩、正确报告与未测量标签、实际评分器产出的错误引用失败报告、拒绝伪造分数、拒绝在线声明，以及清除 / 无上传 / 无页面脚本异常。报告和脚本位于 `.local/model-ui/replay-checks/report.json` 与 `.local/model-ui/check-replay.js`，截图仅保留本地；既有 favicon 404 不影响功能。
+- `.gitattributes` 只对两份摘要绑定的 JSON 固定 LF；模拟 `core.autocrlf=true` 的新索引检出后，两文件仍逐字节与当前文件一致，结果 `.local/model-ui/replay-checks/eol-check.json`。首轮所有业务检查虽通过，但运行期间补充该属性导致源码冻结检查按设计拒绝整轮；首轮报告 `d07d96bb38c041648f619dd5914efef0` 不作为最终通过证据，之后对最终文件集完整重验通过。
+- 所有自有 API / Vite / 浏览器均已关闭。隐私规则和文档链接检查通过；未读取模型密钥、调用真实模型或产生模型费用。公开提交使用 noreply 邮箱。
+
+### 后续接续
+
+沿用已授权的功能分支推送与 PR 写入，远端 Windows / Ubuntu 结果以本切片对应提交检查为准；不能沿用 PR #2 的旧结果。先按依赖顺序审阅 PR，main 不自动合并。
+
+Stage 9 的真实模型验收仍需确认提供方、具体模型、仅合成数据范围与费用上限。回放工具不认证记录来源、不观察原始模型调用时延或费用，也不证明固定标注具有真实业务权威性；尚无真实模型质量证据，Stage 10 未启动。前端体积警告、最低版本、macOS、本轮 MySQL 和生产身份边界继续保留。下方为前一切片历史。
+
 ## Stage 9 第一切片：受控接口与离线验收（2026-10-18）
 
 - 当前分支 `feature/controlled-model-analysis`；从公开 main 创建后，快进包含交付复现基础的 `20cfbeb`，本切片依赖 PR #1。main 没有合并，原私人历史没有导入公开开发仓库。
