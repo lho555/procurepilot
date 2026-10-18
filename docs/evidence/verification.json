@@ -1,0 +1,87 @@
+{
+  "review_date": "2026-10-15",
+  "source_commit": null,
+  "source_sha256": "d8824a59e740465ff7f69aca1c0ba7f228659fb9c193b589165be2ed42f804fa",
+  "golden_sha256": "dae40d9668ece8516462ddadf8cbdce9f2f5e1c5624e7ee1bf6a2c276844c69f",
+  "environment": {
+    "python": "3.14.3",
+    "versions": {
+      "fastapi": "0.142.2",
+      "pydantic": "2.13.5",
+      "SQLAlchemy": "2.0.54",
+      "langgraph": "1.2.12",
+      "mcp": "1.30.0",
+      "pytest": "9.1.1"
+    },
+    "pinned_backend_mismatches": [],
+    "dependency_install": "Reused existing installed dependencies; no network install."
+  },
+  "node": "24.14.0",
+  "npm": "11.21.0",
+  "pytest": {
+    "passed": 116,
+    "duration_seconds": 199.01
+  },
+  "commands": [
+    {
+      "name": "pytest",
+      "started_at": "2026-10-15T03:54:17.949164+00:00",
+      "finished_at": "2026-10-15T03:57:40.275232+00:00",
+      "exit_code": 0,
+      "command": "./.venv/Scripts/python.exe -m pytest backend/tests -v --durations=5 --import-mode=importlib -o pythonpath=backend --basetemp=.local/<unique-test-directory>"
+    },
+    {
+      "name": "npm-lock-check",
+      "started_at": "2026-10-15T03:52:40.166831+00:00",
+      "finished_at": "2026-10-15T03:52:52.356983+00:00",
+      "exit_code": 0,
+      "command": "npm --prefix frontend ls --depth=0 --json"
+    },
+    {
+      "name": "frontend-build",
+      "started_at": "2026-10-15T03:52:52.357422+00:00",
+      "finished_at": "2026-10-15T03:53:01.600292+00:00",
+      "exit_code": 0,
+      "command": "npm --prefix frontend run build"
+    },
+    {
+      "name": "golden-evals",
+      "started_at": "2026-10-15T03:51:03.524453+00:00",
+      "finished_at": "2026-10-15T03:52:03.812897+00:00",
+      "exit_code": 0,
+      "command": "./.venv/Scripts/python.exe scripts/run_evals.py --confirm"
+    },
+    {
+      "name": "knowledge-import",
+      "started_at": "2026-10-15T03:52:34.210211+00:00",
+      "finished_at": "2026-10-15T03:52:34.828741+00:00",
+      "exit_code": 0,
+      "command": "$env:PYTHONPATH='backend'; ./.venv/Scripts/python.exe -m app.import_knowledge --confirm"
+    },
+    {
+      "name": "restart-demo",
+      "started_at": "2026-10-15T03:52:34.829156+00:00",
+      "finished_at": "2026-10-15T03:52:59.950701+00:00",
+      "exit_code": 0,
+      "command": "$env:PYTHONPATH='backend'; ./.venv/Scripts/python.exe scripts/stage6_demo.py --confirm --database sqlite"
+    },
+    {
+      "name": "browser",
+      "started_at": "2026-10-15T03:53:33.285111+00:00",
+      "finished_at": "2026-10-15T03:53:51.935573+00:00",
+      "exit_code": 0,
+      "command": "node scripts/stage8_demo.cjs .local/evals/<run_id>/report.json"
+    }
+  ],
+  "known_initial_attempts": [
+    "Private harness initially omitted the pytest base-temp parent directory; corrected with no product changes.",
+    "Second suite run exceeded a 180 second harness limit and was not counted as passing; final isolated rerun uses a 600 second limit."
+  ],
+  "coverage_limits": [
+    "Existing dependencies reused, no fresh network install",
+    "Windows and isolated SQLite only",
+    "Browser checks are read-only report/UI checks, not full approval-writing UI E2E",
+    "No production auth/ERP/model evaluation, no MySQL rerun",
+    "No Git history exists for a history scan"
+  ]
+}

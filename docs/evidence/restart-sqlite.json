@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "stage": 6,
+  "database": "sqlite",
+  "process_ids": [
+    22988,
+    22236
+  ],
+  "run_id": "WF-c54e0a9cdd214295a4f197965189f276",
+  "request_id": "PR-1eb5e513d7f547f3b0fc98d1517c753a",
+  "analysis_run_id": "RUN-8b05e8ad9cea45f5939155ebeeeff248",
+  "checkpoints": [
+    {
+      "revision": 1,
+      "phase": "ANALYZE",
+      "status": "READY",
+      "created_at": "2026-10-15T03:52:41.336717+00:00"
+    },
+    {
+      "revision": 2,
+      "phase": "DRAFT",
+      "status": "READY",
+      "created_at": "2026-10-15T03:52:46.270357+00:00"
+    },
+    {
+      "revision": 3,
+      "phase": "APPROVAL",
+      "status": "WAITING_APPROVAL",
+      "created_at": "2026-10-15T03:52:46.519166+00:00"
+    },
+    {
+      "revision": 4,
+      "phase": "EXECUTE",
+      "status": "WAITING_EXECUTION",
+      "created_at": "2026-10-15T03:52:50.479814+00:00"
+    },
+    {
+      "revision": 5,
+      "phase": "DONE",
+      "status": "COMPLETED",
+      "created_at": "2026-10-15T03:52:51.329501+00:00"
+    }
+  ],
+  "checks": [
+    "actual_api_restart",
+    "saved_analysis_unchanged",
+    "one_draft_per_workflow",
+    "explicit_execution_confirmation",
+    "idempotent_start_and_resume",
+    "key_conflict_rejected",
+    "rejection_no_action",
+    "stock_unchanged"
+  ],
+  "source_sha256": "d8824a59e740465ff7f69aca1c0ba7f228659fb9c193b589165be2ed42f804fa",
+  "finished_at": "2026-10-15T03:52:59.950701+00:00"
+}

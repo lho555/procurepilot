@@ -1,0 +1,637 @@
+{
+  "responses": [
+    {
+      "path": "/workflows",
+      "http": 200,
+      "body": {
+        "id": "WF-ce1106ab1f434eac9d05b63431fe9ba8",
+        "idempotency_key": "eval-idempotent_creation-fbb124822b294339a60f2dcf0af44929",
+        "phase": "APPROVAL",
+        "status": "WAITING_APPROVAL",
+        "revision": 3,
+        "state": {
+          "analysis": {
+            "run_id": "RUN-aa8d83675f6c477b9a67225fe9bdb8f9",
+            "query": "分析 PO-2026-10086",
+            "order_id": "PO-2026-10086",
+            "status": "COMPLETED",
+            "current_step": "final_response",
+            "facts": {
+              "order": {
+                "id": "PO-2026-10086",
+                "supplier_id": "SUP-A",
+                "due_date": "2026-10-10",
+                "supplier_delivery_date": "2026-10-12",
+                "status": "OPEN",
+                "items": [
+                  {
+                    "sku": "SKU-MOTOR-01",
+                    "quantity": 100
+                  }
+                ]
+              },
+              "inventory": [
+                {
+                  "sku": "SKU-MOTOR-01",
+                  "name": "电机（合成物料）",
+                  "on_hand": 30,
+                  "reserved": 8,
+                  "available": 22
+                }
+              ],
+              "supplier": {
+                "id": "SUP-A",
+                "name": "合成供应商 A",
+                "lead_time_days": 3,
+                "quotes": [
+                  {
+                    "id": "QUOTE-A-BOLT",
+                    "sku": "SKU-BOLT-01",
+                    "unit_price": "0.80",
+                    "currency": "CNY",
+                    "minimum_order_quantity": 100,
+                    "lead_time_days": 2
+                  },
+                  {
+                    "id": "QUOTE-A-MOTOR",
+                    "sku": "SKU-MOTOR-01",
+                    "unit_price": "120.00",
+                    "currency": "CNY",
+                    "minimum_order_quantity": 50,
+                    "lead_time_days": 3
+                  }
+                ]
+              },
+              "shortages": [
+                {
+                  "sku": "SKU-MOTOR-01",
+                  "required": 100,
+                  "available": 22,
+                  "shortage": 78
+                }
+              ],
+              "delay_days": 2,
+              "needs_review": true
+            },
+            "policy": {
+              "question": "采购制度 缺货 供应商延期 紧急采购 人工审批",
+              "found": true,
+              "answer": "根据以下合成制度原文摘录：\n\n[1] 确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。\n\n[2] 紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。\n\n[3] 如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。",
+              "method": "extractive",
+              "index_revision": "20014316ff9633a700fbdf0cc9da61acd5e15ff0cae5280bfe9fb40c1aa7ee75",
+              "citations": [
+                {
+                  "number": 1,
+                  "chunk_id": "a5eed71503538a770c47b4f3",
+                  "document_id": "emergency_sop",
+                  "title": "紧急采购 SOP（合成演示）",
+                  "filename": "emergency_sop.md",
+                  "section": "紧急采购处理步骤",
+                  "start_line": 14,
+                  "end_line": 18,
+                  "excerpt": "确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。",
+                  "score": 0.238793,
+                  "source_sha256": "88b1b1bf492f497bf3479f335ebab17d62d553e0c9d2e00499e8ca42470219b5"
+                },
+                {
+                  "number": 2,
+                  "chunk_id": "7d9b03dac79f6e5c307f352f",
+                  "document_id": "procurement_policy",
+                  "title": "采购管理制度（合成演示）",
+                  "filename": "procurement_policy.md",
+                  "section": "紧急采购金额规则",
+                  "start_line": 13,
+                  "end_line": 17,
+                  "excerpt": "紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。",
+                  "score": 0.192912,
+                  "source_sha256": "42c19283859815e4c6506970a781cd351688ab9d3ef12e42c162af6ae51d40bc"
+                },
+                {
+                  "number": 3,
+                  "chunk_id": "4670f15200f887caf80d8b15",
+                  "document_id": "emergency_sop",
+                  "title": "紧急采购 SOP（合成演示）",
+                  "filename": "emergency_sop.md",
+                  "section": "无依据或审批拒绝",
+                  "start_line": 21,
+                  "end_line": 23,
+                  "excerpt": "如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。",
+                  "score": 0.152327,
+                  "source_sha256": "88b1b1bf492f497bf3479f335ebab17d62d553e0c9d2e00499e8ca42470219b5"
+                }
+              ]
+            },
+            "trace": [
+              {
+                "step": "identify_order",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.189608+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0.53,
+                "error": null
+              },
+              {
+                "step": "query_order",
+                "tool": "get_purchase_order",
+                "arguments": {
+                  "order_id": "PO-2026-10086"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.190854+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1572.13,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_inventory",
+                "tool": "get_inventory",
+                "arguments": {
+                  "sku": "SKU-MOTOR-01"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:59.763621+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1472.68,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_supplier",
+                "tool": "get_supplier",
+                "arguments": {
+                  "supplier_id": "SUP-A"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:01.236949+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1457.5,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "retrieve_policy",
+                "tool": "retrieve_policy",
+                "arguments": {
+                  "question": "采购制度 缺货 供应商延期 紧急采购 人工审批"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.695048+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 3.38,
+                "error": null,
+                "transport": "local"
+              },
+              {
+                "step": "reason",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.698975+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0.04,
+                "error": null,
+                "transport": "local"
+              },
+              {
+                "step": "final_response",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.699370+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0,
+                "error": null
+              }
+            ],
+            "tool_calls": [
+              {
+                "step": "query_order",
+                "tool": "get_purchase_order",
+                "arguments": {
+                  "order_id": "PO-2026-10086"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.190854+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1572.13,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_inventory",
+                "tool": "get_inventory",
+                "arguments": {
+                  "sku": "SKU-MOTOR-01"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:59.763621+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1472.68,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_supplier",
+                "tool": "get_supplier",
+                "arguments": {
+                  "supplier_id": "SUP-A"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:01.236949+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1457.5,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "retrieve_policy",
+                "tool": "retrieve_policy",
+                "arguments": {
+                  "question": "采购制度 缺货 供应商延期 紧急采购 人工审批"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.695048+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 3.38,
+                "error": null,
+                "transport": "local"
+              }
+            ],
+            "final_answer": "订单 PO-2026-10086 的只读分析（合成快照）：\n\nSKU-MOTOR-01：需求 100，可用库存 22，参考缺口 78。\n\n供应商预计交付比要求交期晚 2 天。\n\n建议人工核实库存与交期，查询替代供应商报价和起订量；如需追加采购，先准备草稿并按制度提交人工审批。\n\n制度依据仅摘录以下导入快照，不代表采购已获批准：\n\n[1] 确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。\n\n[2] 紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。\n\n[3] 如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。\n\n本次没有保存草稿、修改库存、下单或执行采购。",
+            "error": null,
+            "adapter": "mock",
+            "read_only": true
+          },
+          "request_id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7"
+        },
+        "request_id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7",
+        "busy": false,
+        "request": {
+          "request": {
+            "id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7",
+            "source_order_id": "PO-2026-10086",
+            "sku": "SKU-MOTOR-01",
+            "supplier_id": "SUP-B",
+            "quantity": 78,
+            "reason": "Stage 7 合成评测",
+            "status": "WAITING_APPROVAL",
+            "created_at": "2026-10-15T03:52:03.053182+00:00"
+          },
+          "events": [
+            {
+              "id": "AE-156006d5a65f44269601a51c36034b4d",
+              "event": "SUBMITTED",
+              "actor": "Stage 7 Eval",
+              "comment": "显式确认的隔离合成评测",
+              "created_at": "2026-10-15T03:52:03.054373+00:00"
+            }
+          ],
+          "action": null
+        },
+        "checkpoints": [
+          {
+            "revision": 1,
+            "phase": "ANALYZE",
+            "status": "READY",
+            "created_at": "2026-10-15T03:51:57.675962+00:00"
+          },
+          {
+            "revision": 2,
+            "phase": "DRAFT",
+            "status": "READY",
+            "created_at": "2026-10-15T03:52:02.777365+00:00"
+          },
+          {
+            "revision": 3,
+            "phase": "APPROVAL",
+            "status": "WAITING_APPROVAL",
+            "created_at": "2026-10-15T03:52:03.056856+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/workflows",
+      "http": 200,
+      "body": {
+        "id": "WF-ce1106ab1f434eac9d05b63431fe9ba8",
+        "idempotency_key": "eval-idempotent_creation-fbb124822b294339a60f2dcf0af44929",
+        "phase": "APPROVAL",
+        "status": "WAITING_APPROVAL",
+        "revision": 3,
+        "state": {
+          "analysis": {
+            "run_id": "RUN-aa8d83675f6c477b9a67225fe9bdb8f9",
+            "query": "分析 PO-2026-10086",
+            "order_id": "PO-2026-10086",
+            "status": "COMPLETED",
+            "current_step": "final_response",
+            "facts": {
+              "order": {
+                "id": "PO-2026-10086",
+                "supplier_id": "SUP-A",
+                "due_date": "2026-10-10",
+                "supplier_delivery_date": "2026-10-12",
+                "status": "OPEN",
+                "items": [
+                  {
+                    "sku": "SKU-MOTOR-01",
+                    "quantity": 100
+                  }
+                ]
+              },
+              "inventory": [
+                {
+                  "sku": "SKU-MOTOR-01",
+                  "name": "电机（合成物料）",
+                  "on_hand": 30,
+                  "reserved": 8,
+                  "available": 22
+                }
+              ],
+              "supplier": {
+                "id": "SUP-A",
+                "name": "合成供应商 A",
+                "lead_time_days": 3,
+                "quotes": [
+                  {
+                    "id": "QUOTE-A-BOLT",
+                    "sku": "SKU-BOLT-01",
+                    "unit_price": "0.80",
+                    "currency": "CNY",
+                    "minimum_order_quantity": 100,
+                    "lead_time_days": 2
+                  },
+                  {
+                    "id": "QUOTE-A-MOTOR",
+                    "sku": "SKU-MOTOR-01",
+                    "unit_price": "120.00",
+                    "currency": "CNY",
+                    "minimum_order_quantity": 50,
+                    "lead_time_days": 3
+                  }
+                ]
+              },
+              "shortages": [
+                {
+                  "sku": "SKU-MOTOR-01",
+                  "required": 100,
+                  "available": 22,
+                  "shortage": 78
+                }
+              ],
+              "delay_days": 2,
+              "needs_review": true
+            },
+            "policy": {
+              "question": "采购制度 缺货 供应商延期 紧急采购 人工审批",
+              "found": true,
+              "answer": "根据以下合成制度原文摘录：\n\n[1] 确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。\n\n[2] 紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。\n\n[3] 如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。",
+              "method": "extractive",
+              "index_revision": "20014316ff9633a700fbdf0cc9da61acd5e15ff0cae5280bfe9fb40c1aa7ee75",
+              "citations": [
+                {
+                  "number": 1,
+                  "chunk_id": "a5eed71503538a770c47b4f3",
+                  "document_id": "emergency_sop",
+                  "title": "紧急采购 SOP（合成演示）",
+                  "filename": "emergency_sop.md",
+                  "section": "紧急采购处理步骤",
+                  "start_line": 14,
+                  "end_line": 18,
+                  "excerpt": "确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。",
+                  "score": 0.238793,
+                  "source_sha256": "88b1b1bf492f497bf3479f335ebab17d62d553e0c9d2e00499e8ca42470219b5"
+                },
+                {
+                  "number": 2,
+                  "chunk_id": "7d9b03dac79f6e5c307f352f",
+                  "document_id": "procurement_policy",
+                  "title": "采购管理制度（合成演示）",
+                  "filename": "procurement_policy.md",
+                  "section": "紧急采购金额规则",
+                  "start_line": 13,
+                  "end_line": 17,
+                  "excerpt": "紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。",
+                  "score": 0.192912,
+                  "source_sha256": "42c19283859815e4c6506970a781cd351688ab9d3ef12e42c162af6ae51d40bc"
+                },
+                {
+                  "number": 3,
+                  "chunk_id": "4670f15200f887caf80d8b15",
+                  "document_id": "emergency_sop",
+                  "title": "紧急采购 SOP（合成演示）",
+                  "filename": "emergency_sop.md",
+                  "section": "无依据或审批拒绝",
+                  "start_line": 21,
+                  "end_line": 23,
+                  "excerpt": "如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。",
+                  "score": 0.152327,
+                  "source_sha256": "88b1b1bf492f497bf3479f335ebab17d62d553e0c9d2e00499e8ca42470219b5"
+                }
+              ]
+            },
+            "trace": [
+              {
+                "step": "identify_order",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.189608+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0.53,
+                "error": null
+              },
+              {
+                "step": "query_order",
+                "tool": "get_purchase_order",
+                "arguments": {
+                  "order_id": "PO-2026-10086"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.190854+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1572.13,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_inventory",
+                "tool": "get_inventory",
+                "arguments": {
+                  "sku": "SKU-MOTOR-01"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:59.763621+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1472.68,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_supplier",
+                "tool": "get_supplier",
+                "arguments": {
+                  "supplier_id": "SUP-A"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:01.236949+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1457.5,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "retrieve_policy",
+                "tool": "retrieve_policy",
+                "arguments": {
+                  "question": "采购制度 缺货 供应商延期 紧急采购 人工审批"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.695048+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 3.38,
+                "error": null,
+                "transport": "local"
+              },
+              {
+                "step": "reason",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.698975+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0.04,
+                "error": null,
+                "transport": "local"
+              },
+              {
+                "step": "final_response",
+                "tool": null,
+                "arguments": {},
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.699370+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 0,
+                "error": null
+              }
+            ],
+            "tool_calls": [
+              {
+                "step": "query_order",
+                "tool": "get_purchase_order",
+                "arguments": {
+                  "order_id": "PO-2026-10086"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:58.190854+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1572.13,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_inventory",
+                "tool": "get_inventory",
+                "arguments": {
+                  "sku": "SKU-MOTOR-01"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:51:59.763621+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1472.68,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "query_supplier",
+                "tool": "get_supplier",
+                "arguments": {
+                  "supplier_id": "SUP-A"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:01.236949+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 1457.5,
+                "error": null,
+                "transport": "mcp:stdio"
+              },
+              {
+                "step": "retrieve_policy",
+                "tool": "retrieve_policy",
+                "arguments": {
+                  "question": "采购制度 缺货 供应商延期 紧急采购 人工审批"
+                },
+                "attempt": 1,
+                "started_at": "2026-10-15T03:52:02.695048+00:00",
+                "status": "SUCCESS",
+                "duration_ms": 3.38,
+                "error": null,
+                "transport": "local"
+              }
+            ],
+            "final_answer": "订单 PO-2026-10086 的只读分析（合成快照）：\n\nSKU-MOTOR-01：需求 100，可用库存 22，参考缺口 78。\n\n供应商预计交付比要求交期晚 2 天。\n\n建议人工核实库存与交期，查询替代供应商报价和起订量；如需追加采购，先准备草稿并按制度提交人工审批。\n\n制度依据仅摘录以下导入快照，不代表采购已获批准：\n\n[1] 确认缺货或供应商延期后，评估正常流程是否能满足交期。确有紧急需求时查询候选供应商报价和交期。\n核查供应商准入状态以及物料报价、最小起订量、金额和币种，随后准备采购申请草稿。\n草稿列明来源订单、物料、缺口、候选供应商、采购原因以及采购管理制度的引用。\n按照紧急采购金额规则提交人工审批。审批通过之前不得下单、付款或调用采购执行工具。\n\n[2] 紧急采购适用于已经确认的缺货或供应商延期，并且标准采购流程无法满足订单交期的情况。\n紧急采购预算小于或等于 20000 元人民币时，必须由采购经理审批。\n紧急采购预算超过 20000 元人民币时，必须由采购经理和财务负责人共同审批。\n金额阈值不能免除审批，不允许将同一需求拆分申请以规避审批要求。\n\n[3] 如果库存、报价或采购制度依据缺失，必须明确说明缺失项并转交人工核实，不得编造结论。\n审批被拒绝时停止采购动作，保留拒绝记录，通知业务人员另行评估交期和供货方案。\n紧急采购不意味着自动授权，所有写动作都必须经过明确的人工确认。\n\n本次没有保存草稿、修改库存、下单或执行采购。",
+            "error": null,
+            "adapter": "mock",
+            "read_only": true
+          },
+          "request_id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7"
+        },
+        "request_id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7",
+        "busy": false,
+        "request": {
+          "request": {
+            "id": "PR-3d6b67f35e4a401d8b19b8fdfa0442d7",
+            "source_order_id": "PO-2026-10086",
+            "sku": "SKU-MOTOR-01",
+            "supplier_id": "SUP-B",
+            "quantity": 78,
+            "reason": "Stage 7 合成评测",
+            "status": "WAITING_APPROVAL",
+            "created_at": "2026-10-15T03:52:03.053182+00:00"
+          },
+          "events": [
+            {
+              "id": "AE-156006d5a65f44269601a51c36034b4d",
+              "event": "SUBMITTED",
+              "actor": "Stage 7 Eval",
+              "comment": "显式确认的隔离合成评测",
+              "created_at": "2026-10-15T03:52:03.054373+00:00"
+            }
+          ],
+          "action": null
+        },
+        "checkpoints": [
+          {
+            "revision": 1,
+            "phase": "ANALYZE",
+            "status": "READY",
+            "created_at": "2026-10-15T03:51:57.675962+00:00"
+          },
+          {
+            "revision": 2,
+            "phase": "DRAFT",
+            "status": "READY",
+            "created_at": "2026-10-15T03:52:02.777365+00:00"
+          },
+          {
+            "revision": 3,
+            "phase": "APPROVAL",
+            "status": "WAITING_APPROVAL",
+            "created_at": "2026-10-15T03:52:03.056856+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/workflows",
+      "http": 409,
+      "body": {
+        "detail": "幂等键已用于不同输入"
+      }
+    }
+  ]
+}

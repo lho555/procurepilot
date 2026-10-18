@@ -1,0 +1,34 @@
+{
+  "responses": [
+    {
+      "path": "/agent/analyze",
+      "http": 200,
+      "body": {
+        "run_id": "RUN-a7b243c9a2e043df9930ca57dcbf04e5",
+        "query": "分析 PO-2026-10086 和 PO-2026-10087",
+        "order_id": null,
+        "status": "NEEDS_INPUT",
+        "current_step": "identify_order",
+        "facts": {},
+        "policy": {},
+        "trace": [
+          {
+            "step": "identify_order",
+            "tool": null,
+            "arguments": {},
+            "attempt": 1,
+            "started_at": "2026-10-15T03:51:37.926697+00:00",
+            "status": "NEEDS_INPUT",
+            "duration_ms": 0.02,
+            "error": null
+          }
+        ],
+        "tool_calls": [],
+        "final_answer": "请提供一个明确的订单号，例如 PO-2026-10086。",
+        "error": "请提供一个明确的订单号，例如 PO-2026-10086。",
+        "adapter": "mock",
+        "read_only": true
+      }
+    }
+  ]
+}

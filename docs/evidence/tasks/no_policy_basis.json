@@ -1,0 +1,16 @@
+{
+  "responses": [
+    {
+      "path": "/knowledge/ask",
+      "http": 200,
+      "body": {
+        "question": "火星量子香蕉许可证",
+        "found": false,
+        "answer": "未找到依据，请补充问题或交由人工核实。",
+        "method": "extractive",
+        "index_revision": "20014316ff9633a700fbdf0cc9da61acd5e15ff0cae5280bfe9fb40c1aa7ee75",
+        "citations": []
+      }
+    }
+  ]
+}

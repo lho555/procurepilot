@@ -1,0 +1,21 @@
+{
+  "responses": [
+    {
+      "path": "/purchase-requests/draft",
+      "http": 422,
+      "body": {
+        "detail": [
+          {
+            "type": "bool_type",
+            "loc": [
+              "body",
+              "draft_creation_confirmed"
+            ],
+            "msg": "Input should be a valid boolean",
+            "input": "true"
+          }
+        ]
+      }
+    }
+  ]
+}

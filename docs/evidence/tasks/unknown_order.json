@@ -1,0 +1,61 @@
+{
+  "responses": [
+    {
+      "path": "/agent/analyze",
+      "http": 200,
+      "body": {
+        "run_id": "RUN-c925feadb0fa4db4a9912cfc7615b419",
+        "query": "分析 PO-2026-99999",
+        "order_id": "PO-2026-99999",
+        "status": "NOT_FOUND",
+        "current_step": "query_order",
+        "facts": {},
+        "policy": {},
+        "trace": [
+          {
+            "step": "identify_order",
+            "tool": null,
+            "arguments": {},
+            "attempt": 1,
+            "started_at": "2026-10-15T03:51:37.958240+00:00",
+            "status": "SUCCESS",
+            "duration_ms": 0.02,
+            "error": null
+          },
+          {
+            "step": "query_order",
+            "tool": "get_purchase_order",
+            "arguments": {
+              "order_id": "PO-2026-99999"
+            },
+            "attempt": 1,
+            "started_at": "2026-10-15T03:51:37.958997+00:00",
+            "status": "FAILED",
+            "duration_ms": 1462.25,
+            "error": "业务记录不存在",
+            "transport": "mcp:stdio"
+          }
+        ],
+        "tool_calls": [
+          {
+            "step": "query_order",
+            "tool": "get_purchase_order",
+            "arguments": {
+              "order_id": "PO-2026-99999"
+            },
+            "attempt": 1,
+            "started_at": "2026-10-15T03:51:37.958997+00:00",
+            "status": "FAILED",
+            "duration_ms": 1462.25,
+            "error": "业务记录不存在",
+            "transport": "mcp:stdio"
+          }
+        ],
+        "final_answer": "未找到订单或关联业务记录，请核对输入。",
+        "error": "业务记录不存在",
+        "adapter": "mock",
+        "read_only": true
+      }
+    }
+  ]
+}

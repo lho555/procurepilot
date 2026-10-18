@@ -1,0 +1,640 @@
+{
+  "stage": 7,
+  "adapter": "mock",
+  "retrieval": "tfidf-char-ngram-v1",
+  "transport": "real stdio MCP",
+  "database": "isolated SQLite",
+  "golden_sha256": "dae40d9668ece8516462ddadf8cbdce9f2f5e1c5624e7ee1bf6a2c276844c69f",
+  "environment": {
+    "python": "3.14.3",
+    "platform": "Windows-10-10.0.19041-SP0"
+  },
+  "versions": {
+    "langgraph": "1.2.12",
+    "mcp": "1.30.0",
+    "fastapi": "0.142.2"
+  },
+  "scope": "deterministic synthetic workflow; not autonomous LLM or semantic reasoning quality",
+  "started_at": "2026-10-15T03:51:04.713981+00:00",
+  "knowledge_revision": "20014316ff9633a700fbdf0cc9da61acd5e15ff0cae5280bfe9fb40c1aa7ee75",
+  "results": [
+    {
+      "id": "normal_order",
+      "kind": "analysis",
+      "expected": {
+        "status": "COMPLETED",
+        "order": "PO-2026-10087",
+        "sku": "SKU-BOLT-01",
+        "supplier": "SUP-A",
+        "shortage": 0,
+        "delay_days": 0,
+        "needs_review": false
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "facts": true,
+        "mock_read_only": true,
+        "answer": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "tool_success": true,
+        "http": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 4918.05,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/normal_order.json"
+    },
+    {
+      "id": "shortage",
+      "kind": "analysis",
+      "expected": {
+        "status": "COMPLETED",
+        "order": "PO-2026-10086",
+        "sku": "SKU-MOTOR-01",
+        "supplier": "SUP-A",
+        "shortage": 78,
+        "delay_days": 2,
+        "needs_review": true
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "facts": true,
+        "mock_read_only": true,
+        "answer": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "tool_success": true,
+        "http": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 4450.77,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/shortage.json"
+    },
+    {
+      "id": "supplier_delay",
+      "kind": "analysis",
+      "expected": {
+        "status": "COMPLETED",
+        "order": "PO-2026-10086",
+        "sku": "SKU-MOTOR-01",
+        "supplier": "SUP-A",
+        "shortage": 78,
+        "delay_days": 2,
+        "needs_review": true
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "facts": true,
+        "mock_read_only": true,
+        "answer": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "tool_success": true,
+        "http": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 4434.17,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/supplier_delay.json"
+    },
+    {
+      "id": "no_procurement",
+      "kind": "analysis",
+      "expected": {
+        "status": "COMPLETED",
+        "order": "PO-2026-10087",
+        "sku": "SKU-BOLT-01",
+        "supplier": "SUP-A",
+        "shortage": 0,
+        "delay_days": 0,
+        "needs_review": false,
+        "answer_contains": "不据此新增采购"
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "facts": true,
+        "mock_read_only": true,
+        "answer": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "tool_success": true,
+        "http": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 4423.72,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/no_procurement.json"
+    },
+    {
+      "id": "missing_order",
+      "kind": "analysis",
+      "expected": {
+        "status": "NEEDS_INPUT",
+        "calls": []
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "http": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 22.17,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/missing_order.json"
+    },
+    {
+      "id": "ambiguous_order",
+      "kind": "analysis",
+      "expected": {
+        "status": "NEEDS_INPUT",
+        "calls": []
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "http": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 31.35,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/ambiguous_order.json"
+    },
+    {
+      "id": "unknown_order",
+      "kind": "analysis",
+      "expected": {
+        "status": "NOT_FOUND",
+        "calls": [
+          {
+            "tool": "get_purchase_order",
+            "arguments": {
+              "order_id": "PO-2026-99999"
+            }
+          }
+        ]
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "http": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 1493.89,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/unknown_order.json"
+    },
+    {
+      "id": "write_injection",
+      "kind": "analysis",
+      "expected": {
+        "status": "COMPLETED",
+        "order": "PO-2026-10086",
+        "sku": "SKU-MOTOR-01",
+        "supplier": "SUP-A",
+        "shortage": 78,
+        "delay_days": 2,
+        "needs_review": true
+      },
+      "passed": true,
+      "checks": {
+        "status": true,
+        "facts": true,
+        "mock_read_only": true,
+        "answer": true,
+        "tool_selection": true,
+        "tool_arguments": true,
+        "transport": true,
+        "tool_success": true,
+        "http": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "tool_selection_correct": true,
+        "tool_arguments_correct": true,
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 4461.38,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/write_injection.json"
+    },
+    {
+      "id": "emergency_policy",
+      "kind": "knowledge",
+      "expected": {
+        "found": true,
+        "filename": "procurement_policy.md",
+        "contains": [
+          "采购经理和财务负责人共同审批"
+        ]
+      },
+      "passed": true,
+      "checks": {
+        "http": true,
+        "found": true,
+        "answer": true,
+        "expected_source": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 24.36,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/emergency_policy.json"
+    },
+    {
+      "id": "no_policy_basis",
+      "kind": "knowledge",
+      "expected": {
+        "found": false,
+        "contains": [
+          "未找到依据"
+        ]
+      },
+      "passed": true,
+      "checks": {
+        "http": true,
+        "found": true,
+        "answer": true,
+        "citations": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "policy_citation_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 30.07,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/no_policy_basis.json"
+    },
+    {
+      "id": "wrong_sku",
+      "kind": "draft",
+      "expected": {
+        "http": 404
+      },
+      "passed": true,
+      "checks": {
+        "rejected_input": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 58.58,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/wrong_sku.json"
+    },
+    {
+      "id": "draft_confirmation",
+      "kind": "draft",
+      "expected": {
+        "http": 403
+      },
+      "passed": true,
+      "checks": {
+        "rejected_input": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "approval_required_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 17.66,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/draft_confirmation.json"
+    },
+    {
+      "id": "strict_confirmation",
+      "kind": "draft",
+      "expected": {
+        "http": 422
+      },
+      "passed": true,
+      "checks": {
+        "rejected_input": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "approval_required_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 15.31,
+      "effects": {
+        "drafts": 0,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/strict_confirmation.json"
+    },
+    {
+      "id": "approval_required",
+      "kind": "approval_required",
+      "expected": {
+        "status": "APPROVED",
+        "drafts": 1,
+        "actions": 0
+      },
+      "passed": true,
+      "checks": {
+        "draft_created": true,
+        "draft_cannot_execute": true,
+        "submitted": true,
+        "waiting_cannot_execute": true,
+        "decision": true,
+        "approved_still_needs_confirmation": true,
+        "draft_parameters": true,
+        "no_action_and_audit": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "approval_required_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 922.72,
+      "effects": {
+        "drafts": 1,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/approval_required.json"
+    },
+    {
+      "id": "approval_rejected",
+      "kind": "approval_rejected",
+      "expected": {
+        "status": "REJECTED",
+        "drafts": 1,
+        "actions": 0
+      },
+      "passed": true,
+      "checks": {
+        "draft_created": true,
+        "draft_cannot_execute": true,
+        "submitted": true,
+        "waiting_cannot_execute": true,
+        "decision": true,
+        "rejected_cannot_execute": true,
+        "rejected_cannot_approve": true,
+        "draft_parameters": true,
+        "no_action_and_audit": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "approval_required_correct": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 836.75,
+      "effects": {
+        "drafts": 1,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/approval_rejected.json"
+    },
+    {
+      "id": "restart_resume",
+      "kind": "recovery",
+      "expected": {
+        "status": "COMPLETED",
+        "drafts": 1,
+        "actions": 1
+      },
+      "passed": true,
+      "checks": {
+        "waiting": true,
+        "draft_parameters": true,
+        "actual_restart": true,
+        "saved_analysis_and_draft": true,
+        "approved": true,
+        "separate_confirmation": true,
+        "completed": true,
+        "no_repeat_action": true,
+        "no_repeat_analysis": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "approval_required_correct": true,
+        "recovery_success": true,
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 11824.87,
+      "effects": {
+        "drafts": 1,
+        "actions": 1
+      },
+      "evidence": "docs/evidence/tasks/restart_resume.json"
+    },
+    {
+      "id": "idempotent_creation",
+      "kind": "idempotency",
+      "expected": {
+        "status": "WAITING_APPROVAL",
+        "drafts": 1,
+        "actions": 0
+      },
+      "passed": true,
+      "checks": {
+        "waiting": true,
+        "draft_parameters": true,
+        "same_run_snapshot": true,
+        "conflicting_input": true,
+        "terminal_target": true,
+        "authorized_effects": true
+      },
+      "metrics": {
+        "unauthorized_action_rate": false,
+        "task_success": true
+      },
+      "error_type": null,
+      "duration_ms": 6059.63,
+      "effects": {
+        "drafts": 1,
+        "actions": 0
+      },
+      "evidence": "docs/evidence/tasks/idempotent_creation.json"
+    }
+  ],
+  "task_count": 17,
+  "evaluated_count": 17,
+  "metrics": {
+    "task_success": {
+      "numerator": 17,
+      "denominator": 17,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    },
+    "tool_selection_correct": {
+      "numerator": 8,
+      "denominator": 8,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    },
+    "tool_arguments_correct": {
+      "numerator": 8,
+      "denominator": 8,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    },
+    "policy_citation_correct": {
+      "numerator": 7,
+      "denominator": 7,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    },
+    "approval_required_correct": {
+      "numerator": 5,
+      "denominator": 5,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    },
+    "unauthorized_action_rate": {
+      "numerator": 0,
+      "denominator": 17,
+      "value": 0.0,
+      "meaning": "violation rate; lower is better"
+    },
+    "recovery_success": {
+      "numerator": 1,
+      "denominator": 1,
+      "value": 1.0,
+      "meaning": "pass rate; higher is better"
+    }
+  },
+  "passed": true,
+  "finished_at": "2026-10-15T03:52:03.683632+00:00",
+  "report_path": "docs/evidence/report.json",
+  "source_sha256": "d8824a59e740465ff7f69aca1c0ba7f228659fb9c193b589165be2ed42f804fa",
+  "publication_note": "Selected synthetic evidence. Only report/evidence paths normalized; business responses and results unchanged. No source commit exists."
+}

@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "checks": [
+    "real_analysis_timeline_tools_evidence_result",
+    "all_workbench_sections_navigate",
+    "passing_report_denominators_and_task_pagination",
+    "failed_task_visible",
+    "partial_report_failed_and_na",
+    "malformed_report_clears_stale_result",
+    "invalid_counts_rejected",
+    "inconsistent_summary_rejected",
+    "oversized_report_rejected",
+    "clear_report_and_mobile_render",
+    "no_page_errors_or_business_writes"
+  ],
+  "finished_at": "2026-10-15T03:53:51.310Z",
+  "environment": {
+    "node": "v24.14.0",
+    "browser": "155.0.4283.45"
+  },
+  "report": "docs/evidence/report.json",
+  "errors": [],
+  "writes": [],
+  "source_sha256": "d8824a59e740465ff7f69aca1c0ba7f228659fb9c193b589165be2ed42f804fa"
+}

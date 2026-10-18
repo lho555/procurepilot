@@ -1,0 +1,11 @@
+{
+  "responses": [
+    {
+      "path": "/purchase-requests/draft",
+      "http": 404,
+      "body": {
+        "detail": "记录不存在"
+      }
+    }
+  ]
+}

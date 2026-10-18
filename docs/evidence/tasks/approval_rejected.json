@@ -1,0 +1,138 @@
+{
+  "responses": [
+    {
+      "path": "/purchase-requests/draft",
+      "http": 201,
+      "body": {
+        "id": "PR-908542459d73439e8f7db966932ec3b3",
+        "source_order_id": "PO-2026-10086",
+        "sku": "SKU-MOTOR-01",
+        "supplier_id": "SUP-B",
+        "quantity": 78,
+        "reason": "Stage 7 合成评测",
+        "status": "DRAFT",
+        "created_at": "2026-10-15T03:51:44.984423+00:00"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/mock-action",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/submit",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-908542459d73439e8f7db966932ec3b3",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "WAITING_APPROVAL",
+          "created_at": "2026-10-15T03:51:44.984423+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-2a2fb74fc34e432abb9ed61c4fe0f7e0",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:45.199931+00:00"
+          }
+        ],
+        "action": null
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/mock-action",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/decision",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-908542459d73439e8f7db966932ec3b3",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "REJECTED",
+          "created_at": "2026-10-15T03:51:44.984423+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-2a2fb74fc34e432abb9ed61c4fe0f7e0",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:45.199931+00:00"
+          },
+          {
+            "id": "AE-cae3c0a284af460a993ee1975f65ee99",
+            "event": "REJECTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:45.465329+00:00"
+          }
+        ],
+        "action": null
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/mock-action",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3/decision",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-908542459d73439e8f7db966932ec3b3",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-908542459d73439e8f7db966932ec3b3",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "REJECTED",
+          "created_at": "2026-10-15T03:51:44.984423+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-2a2fb74fc34e432abb9ed61c4fe0f7e0",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:45.199931+00:00"
+          },
+          {
+            "id": "AE-cae3c0a284af460a993ee1975f65ee99",
+            "event": "REJECTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:45.465329+00:00"
+          }
+        ],
+        "action": null
+      }
+    }
+  ]
+}

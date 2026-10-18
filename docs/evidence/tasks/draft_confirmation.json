@@ -1,0 +1,11 @@
+{
+  "responses": [
+    {
+      "path": "/purchase-requests/draft",
+      "http": 403,
+      "body": {
+        "detail": "保存草稿前必须显式确认"
+      }
+    }
+  ]
+}

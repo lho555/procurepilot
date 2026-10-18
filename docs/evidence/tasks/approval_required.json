@@ -1,0 +1,131 @@
+{
+  "responses": [
+    {
+      "path": "/purchase-requests/draft",
+      "http": 201,
+      "body": {
+        "id": "PR-974a138cba984273a5c354fdec417f19",
+        "source_order_id": "PO-2026-10086",
+        "sku": "SKU-MOTOR-01",
+        "supplier_id": "SUP-B",
+        "quantity": 78,
+        "reason": "Stage 7 合成评测",
+        "status": "DRAFT",
+        "created_at": "2026-10-15T03:51:44.070217+00:00"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19/mock-action",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19/submit",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-974a138cba984273a5c354fdec417f19",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "WAITING_APPROVAL",
+          "created_at": "2026-10-15T03:51:44.070217+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-e457ade8487445b78135f628758fc7e4",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:44.313265+00:00"
+          }
+        ],
+        "action": null
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19/mock-action",
+      "http": 409,
+      "body": {
+        "detail": "当前状态不允许此操作，或 Mock Action 已执行；请刷新后核对"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19/decision",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-974a138cba984273a5c354fdec417f19",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "APPROVED",
+          "created_at": "2026-10-15T03:51:44.070217+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-e457ade8487445b78135f628758fc7e4",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:44.313265+00:00"
+          },
+          {
+            "id": "AE-2a8d71bb8085404fa11cd9dbf4b816ab",
+            "event": "APPROVED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:44.596091+00:00"
+          }
+        ],
+        "action": null
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19/mock-action",
+      "http": 403,
+      "body": {
+        "detail": "此操作必须经人工显式确认"
+      }
+    },
+    {
+      "path": "/purchase-requests/PR-974a138cba984273a5c354fdec417f19",
+      "http": 200,
+      "body": {
+        "request": {
+          "id": "PR-974a138cba984273a5c354fdec417f19",
+          "source_order_id": "PO-2026-10086",
+          "sku": "SKU-MOTOR-01",
+          "supplier_id": "SUP-B",
+          "quantity": 78,
+          "reason": "Stage 7 合成评测",
+          "status": "APPROVED",
+          "created_at": "2026-10-15T03:51:44.070217+00:00"
+        },
+        "events": [
+          {
+            "id": "AE-e457ade8487445b78135f628758fc7e4",
+            "event": "SUBMITTED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:44.313265+00:00"
+          },
+          {
+            "id": "AE-2a8d71bb8085404fa11cd9dbf4b816ab",
+            "event": "APPROVED",
+            "actor": "Stage 7 Eval",
+            "comment": "显式确认的隔离合成评测",
+            "created_at": "2026-10-15T03:51:44.596091+00:00"
+          }
+        ],
+        "action": null
+      }
+    }
+  ]
+}
