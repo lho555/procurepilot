@@ -35,6 +35,7 @@ def child_environment(directory: Path, root: Path = PROJECT_ROOT) -> dict[str, s
         DATABASE_URL=f"sqlite:///{(directory / 'unused.db').as_posix()}",
         RAG_INDEX_PATH=str(directory / "unused-index.json"),
         LANGSMITH_TRACING="false", LANGCHAIN_TRACING_V2="false",
+        PP_LLM_MODE="offline",
     )
     return env
 

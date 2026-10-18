@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.agent import AgentRuntime
 from app.mcp_tools import MCPReadTools
 from app.knowledge import get_knowledge_store
+from app.model_explanation import ConfiguredAdapter
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -16,7 +17,7 @@ class AnalyzeRequest(BaseModel):
 
 
 def get_agent_runtime() -> AgentRuntime:
-    return AgentRuntime(MCPReadTools(get_knowledge_store()))
+    return AgentRuntime(MCPReadTools(get_knowledge_store()), ConfiguredAdapter())
 
 
 @router.post("/analyze")

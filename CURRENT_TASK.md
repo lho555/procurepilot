@@ -1,13 +1,13 @@
 # 当前任务
 
-## 交付复现基础：跨平台 CI 已通过
+## Stage 9：受控模型接口与离线验收已完成
 
-分支：`chore/reproducible-delivery`。业务 Stage 0～8 已完成，当前完善独立安装、统一验证入口与基础 CI。
+分支：`feature/controlled-model-analysis`，在公开 main 创建后快进到已通过 CI 的交付复现分支；本次变更依赖 PR #1，不自动合并 main。
 
-- 以公开仓库为后续开发主线，原私人工作区不作为推送来源。
-- 新环境按锁定文件安装，不复制旧虚拟环境、node_modules、配置或数据库。
-- 新增 `scripts/verify_delivery.py --confirm`，验证依赖、后端、前端、业务闭环与 HTTP 启动链路。
-- GitHub Actions 使用相同命令，声明 Windows / Ubuntu 矩阵，不使用模型密钥、真实业务数据库或生产系统。
-- 本轮 119 项后端测试、17/17 Golden Tasks、前端构建和 3 项启动检查通过；详情见 HANDOFF.md 和 docs/evidence/delivery-20261018.json。GitHub Actions 首轮 Windows / Ubuntu 均通过，远端回执见 docs/evidence/ci-delivery-20261018.json；PR #1 待审阅合并，main 未改动。
+- 独立分析与持久工作流共用适配器配置，默认离线。可显式配置兼容 Chat Completions 的接口，不自动选择模型或启用在线调用。
+- 模型仅选择事实编号、制度引用与允许的建议代码；严格验证后使用确定性文案展示。模型不选工具、不计算、不产生草稿参数或审批决定。
+- 缺少依据、错误引用、服务错误、超时与越权输出均失败；不自动降级、不重试模型调用，失败工作流不创建采购草稿。已保存分析的恢复不重复调用模型。
+- 本轮 Windows 完整离线验收通过：158 项后端测试、前端类型检查与构建、17/17 Golden Tasks、3 项 HTTP 启动检查。浏览器 4 项模式 / 错误 / 执行禁用检查通过；详见 HANDOFF.md 和 docs/evidence/model-analysis-20261018.json。
+- 模型接口使用本地响应替身验证，没有真实模型调用、现有密钥读取或费用。本轮 CI 结果以该功能分支 PR 的对应提交检查为准，不沿用 PR #1 的旧成绩。
 
-下一纵向切片：Stage 9 受控真实模型分析，详见 CODEX_TASKS.md。当前不接入模型、不读取密钥或产生模型费用。
+下一步：确认提供方、具体模型、仅合成数据范围与费用上限，再安排一次人工在线验收及模型质量评测。Stage 9 尚未完成真实模型验证，Stage 10 尚未启动。配置与边界见 [MODEL_ANALYSIS](docs/MODEL_ANALYSIS.md)。

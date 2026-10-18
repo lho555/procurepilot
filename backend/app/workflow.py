@@ -16,10 +16,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.agent import AgentRuntime
+from app.agent_routes import get_agent_runtime
 from app.approval import Confirmation, change, get_request
 from app.database import get_engine
-from app.knowledge import get_knowledge_store
-from app.mcp_tools import MCPReadTools
 from app.models import WorkflowRun, WorkflowCheckpoint
 from app.routes import require, save_draft
 from app.schemas import DraftInput
@@ -184,7 +183,7 @@ class DurableWorkflow:
 
 
 def get_workflow():
-    return DurableWorkflow(get_engine(), AgentRuntime(MCPReadTools(get_knowledge_store())))
+    return DurableWorkflow(get_engine(), get_agent_runtime())
 
 
 @router.get("")

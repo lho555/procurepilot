@@ -11,6 +11,7 @@ from langsmith import tracing_context
 
 from app.agent_tools import READ_TOOLS, ToolClient, RecordNotFound, ToolFailure, TransientToolFailure
 from app.llm_adapter import LLMAdapter, MockLLMAdapter
+from app.model_explanation import ModelFailure
 
 
 class AgentState(TypedDict, total=False):
@@ -48,16 +49,17 @@ class AgentRuntime:
             "adapter": self.adapter.name, "read_only": True,
         }
 
-        async def attempt(step: str, name: str, arguments: dict, operation):
+        async def attempt(step: str, name: str, arguments: dict, operation, *, retry: bool = True, timeout: float | None = None):
             current["current_step"] = step
-            for number in range(1, self.max_attempts + 1):
+            attempts = self.max_attempts if retry else 1
+            for number in range(1, attempts + 1):
                 started = monotonic()
                 entry = {"step": step, "tool": name if name in READ_TOOLS else None, "arguments": arguments, "attempt": number,
                          "started_at": datetime.now(timezone.utc).isoformat(), "status": "RUNNING", "duration_ms": 0, "error": None}
-                entry["transport"] = getattr(self.tools, "transport", lambda _name: "local")(name)
+                entry["transport"] = self.adapter.name if name == "summarize" else getattr(self.tools, "transport", lambda _name: "local")(name)
                 trace.append(entry)
                 try:
-                    async with asyncio.timeout(self.step_timeout):
+                    async with asyncio.timeout(timeout if timeout is not None else self.step_timeout):
                         result = await operation()
                     entry["status"] = "SUCCESS"
                     return result
@@ -66,7 +68,7 @@ class AgentRuntime:
                     raise
                 except (TransientToolFailure, TimeoutError) as error:
                     entry.update(status="TIMEOUT" if isinstance(error, TimeoutError) else "RETRY", error="读取超时" if isinstance(error, TimeoutError) else "暂时读取失败")
-                    if number == self.max_attempts:
+                    if number == attempts:
                         if not isinstance(error, TimeoutError):
                             entry["status"] = "FAILED"
                         raise
@@ -76,6 +78,9 @@ class AgentRuntime:
                     raise
                 except ToolFailure:
                     entry.update(status="FAILED", error="工具不可用")
+                    raise
+                except ModelFailure as error:
+                    entry.update(status="FAILED", error=str(error))
                     raise
                 except Exception as error:
                     entry.update(status="FAILED", error="步骤执行失败")
@@ -125,7 +130,8 @@ class AgentRuntime:
                           "shortage": max(item["quantity"] - stock[item["sku"]]["available"], 0)} for item in order_data["items"]]
             delay_days = max((date.fromisoformat(order_data["supplier_delivery_date"]) - date.fromisoformat(order_data["due_date"])).days, 0)
             facts = {**state["facts"], "shortages": shortages, "delay_days": delay_days, "needs_review": delay_days > 0 or any(item["shortage"] > 0 for item in shortages)}
-            answer = await attempt("reason", "mock_adapter", {}, lambda: self.adapter.summarize(facts, state["policy"]))
+            current["facts"] = facts
+            answer = await attempt("reason", "summarize", {}, lambda: self.adapter.summarize(facts, state["policy"]), retry=False, timeout=12)
             return update(facts=facts, final_answer=answer, current_step="reason")
 
         async def final(_state: AgentState):
@@ -153,6 +159,8 @@ class AgentRuntime:
             current.update(status="NOT_FOUND", error="业务记录不存在", final_answer="未找到订单或关联业务记录，请核对输入。")
         except TimeoutError:
             current.update(status="TIMED_OUT", error="分析达到超时限制，请稍后重新运行。", final_answer="分析超时，已停止后续步骤；未执行任何写动作。")
+        except ModelFailure as error:
+            current.update(status="FAILED", error=str(error), final_answer="模型解释未完成，未切换为离线成功结果；未执行任何写动作。")
         except ToolFailure as error:
             current.update(status="FAILED", error=str(error), final_answer="分析未完成，请检查数据库或知识索引后重新运行；未执行任何写动作。")
         current["trace"] = [dict(entry) for entry in trace]

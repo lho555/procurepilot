@@ -52,7 +52,7 @@ export default function App() {
     <main>
       <Typography.Title>ProcurePilot AI</Typography.Title>
       <Typography.Paragraph>采购 / 供应链异常协同助手</Typography.Paragraph>
-      <Alert style={{ marginBottom: 24 }} type="info" showIcon title="合成数据演示 · 离线 Mock" description="先分析事实与制度，再由人工确认草稿、审批和执行。Mock 执行仅保存本地回执，不下单、不付款、不改变库存。" />
+      <Alert style={{ marginBottom: 24 }} type="info" showIcon title="合成数据 · 人工审批" description="先分析事实与制度，再由人工确认草稿、审批和执行。分析模式以运行结果为准；执行仅保存本地回执，不下单、不付款、不改变库存。" />
       <Card title="服务状态" extra={<Tag>基础服务</Tag>}>
         <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
           <div role="status" aria-live="polite">

@@ -13,6 +13,12 @@ from app.seed import seed
 BACKEND = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(autouse=True)
+def offline_analysis(monkeypatch):
+    # Tests opt into a fake model explicitly; .env must never enable real calls.
+    monkeypatch.setenv("PP_LLM_MODE", "offline")
+
+
 @pytest.fixture
 def database(tmp_path, monkeypatch):
     url = f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
