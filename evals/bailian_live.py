@@ -40,13 +40,19 @@ def write_new(path, value):
         os.fsync(target.fileno())
 
 
-def cases():
+def cases(case_ids=None):
+    if case_ids is not None and type(case_ids) not in (list, tuple):
+        raise ValueError("Select cases with an explicit list")
+    requested = CASE_IDS if case_ids is None else tuple(case_ids)
+    if (not requested or any(type(case_id) is not str or case_id not in CASE_IDS for case_id in requested)
+            or len(requested) != len(set(requested))):
+        raise ValueError("Select unique fixed positive case IDs")
     raw = (ROOT / "evals/model_cases.json").read_bytes()
     suite = Suite.model_validate_json(raw)
     selected = [case for case in suite.cases if case.id in CASE_IDS]
     if tuple(case.id for case in selected) != CASE_IDS or any(case.expected.outcome != "accepted" for case in selected):
         raise ValueError("Live case contract changed")
-    return selected, hashlib.sha256(raw).hexdigest()
+    return [case for case in selected if case.id in requested], hashlib.sha256(raw).hexdigest()
 
 
 def fingerprint():
@@ -95,8 +101,9 @@ def claim_inventory(exclude=None):
             raise ValueError("Invalid historical reservation")
         historical = json.loads(bounded_bytes(path.parent / "plan.json", 100_000))
         if (digest(historical) != claim["plan_sha256"]
-                or type(claim["maximum_requests"]) is not int or claim["maximum_requests"] != 4
+                or type(claim["maximum_requests"]) is not int or not 1 <= claim["maximum_requests"] <= len(CASE_IDS)
                 or historical["spec"]["maximum_requests"] != claim["maximum_requests"]
+                or len(historical["spec"]["requests"]) != claim["maximum_requests"]
                 or historical["spec"]["reserved_cny"] != claim["reserved_cny"]):
             raise ValueError("Historical claim does not match its plan")
         rows.append({"plan_id": path.parent.name, "claim_sha256": hashlib.sha256(raw).hexdigest(),
@@ -113,14 +120,15 @@ def budget_review(specification):
             "unreserved_before_claim_cny": str(cap - prior), "can_claim": prior + proposed <= cap}
 
 
-def spec(budget):
-    if not budget.is_finite() or not RESERVATION <= budget <= Decimal("12"):
-        raise ValueError("Budget must cover the fixed reservation and cannot exceed 12 CNY")
-    selected, case_hash = cases()
+def spec(budget, case_ids=None):
+    selected, case_hash = cases(case_ids)
+    reservation = PER_CALL * len(selected)
+    if not budget.is_finite() or not reservation <= budget <= Decimal("12"):
+        raise ValueError("Budget must cover selected cases and cannot exceed 12 CNY")
     adapter = ChatCompletionsAdapter(ENDPOINT, MODEL, "offline-placeholder", provider="bailian")
     return {"provider": "bailian", "endpoint": ENDPOINT, "model": MODEL, "enable_thinking": False,
-            "approved_budget_cny": str(budget), "reserved_cny": str(RESERVATION), "per_request_reserved_cny": str(PER_CALL),
-            "maximum_requests": len(CASE_IDS), "input_token_cap": INPUT_CAP, "output_token_reserve": OUTPUT_CAP,
+            "approved_budget_cny": str(budget), "reserved_cny": str(reservation), "per_request_reserved_cny": str(PER_CALL),
+            "maximum_requests": len(selected), "input_token_cap": INPUT_CAP, "output_token_reserve": OUTPUT_CAP,
             "input_cny_per_million": str(INPUT_RATE), "output_cny_per_million": str(OUTPUT_RATE),
             "case_sha256": case_hash, "source_sha256": fingerprint(),
             "requests": [{"case_id": case.id, "body_sha256": digest(adapter.request_body(*case.inputs()))} for case in selected],
@@ -128,8 +136,8 @@ def spec(budget):
                            "https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions"]}
 
 
-def prepare(budget):
-    specification = spec(budget)
+def prepare(budget, case_ids=None):
+    specification = spec(budget, case_ids)
     review = budget_review(specification)
     if not review["can_claim"] or os.path.lexists(ROOT / ".local/bailian-claim.lock"):
         raise ValueError("Budget or claim guard prevents a new plan")
@@ -157,7 +165,8 @@ def validate_plan(path):
     created, expires = (datetime.fromisoformat(plan[key]) for key in ("created_at", "expires_at"))
     if not created <= datetime.now(timezone.utc) <= expires or expires - created != timedelta(hours=24):
         raise ValueError("Plan expired or invalid")
-    if digest(plan["spec"]) != digest(spec(Decimal(plan["spec"]["approved_budget_cny"]))):
+    selected = [request["case_id"] for request in plan["spec"]["requests"]]
+    if digest(plan["spec"]) != digest(spec(Decimal(plan["spec"]["approved_budget_cny"]), selected)):
         raise ValueError("Plan, source or request fingerprint changed")
     review = budget_review(plan["spec"])
     if not review["can_claim"] or digest(plan["budget_review"]) != digest(review):
@@ -165,18 +174,22 @@ def validate_plan(path):
     return path, plan
 
 
-def preflight(path=None, budget=Decimal("12")):
+def preflight(path=None, budget=Decimal("12"), case_ids=None):
     """Read-only diagnostic; success is neither authorization nor a claim."""
     if path is None:
-        specification = spec(budget)
+        specification = spec(budget, case_ids)
         review = budget_review(specification)
     else:
+        if case_ids is not None:
+            raise ValueError("A frozen plan cannot change cases")
         _, plan = validate_plan(path)
         specification, review = plan["spec"], plan["budget_review"]
     locked = os.path.lexists(ROOT / ".local/bailian-claim.lock")
     return {"mode": "offline_preflight", "passed": review["can_claim"] and not locked,
             "reason": "claim_lock_present" if locked else None if review["can_claim"] else "budget_exceeded",
             "source_sha256": specification["source_sha256"], "budget_review": review,
+            "selected_case_ids": [request["case_id"] for request in specification["requests"]],
+            "maximum_requests": specification["maximum_requests"],
             "writes": False, "credential_reads": False, "live_model_requests": 0}
 
 
@@ -199,7 +212,7 @@ def reserve_plan(path):
     with claim_guard():
         path, plan = validate_plan(path)  # Recheck under the project-wide guard.
         write_new(path.parent / "claimed.json", {"plan_sha256": digest(plan), "reserved_cny": plan["spec"]["reserved_cny"],
-                                                "maximum_requests": 4, "claimed_at": datetime.now(timezone.utc).isoformat()})
+                                                "maximum_requests": plan["spec"]["maximum_requests"], "claimed_at": datetime.now(timezone.utc).isoformat()})
     return path, plan
 
 
@@ -248,7 +261,8 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
         phase = "configure_adapter"
         adapter = adapter_factory(ENDPOINT, MODEL, key, provider="bailian")
         phase = "prepare_request"
-        for case, request in zip(cases()[0], specification["requests"], strict=True):
+        selected = [request["case_id"] for request in specification["requests"]]
+        for case, request in zip(cases(selected)[0], specification["requests"], strict=True):
             phase, case_id = "prepare_request", case.id
             if digest(adapter.request_body(*case.inputs())) != request["body_sha256"]:
                 raise ValueError("Request changed")
@@ -276,7 +290,7 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
         # Missing credentials, provider failures and uncertain outcomes retain
         # the entire reservation. Never log the original exception or retry.
         failure = safe_failure(error, phase, case_id)
-    complete = len(observations) == 4
+    complete = len(observations) == specification["maximum_requests"]
     passed = complete and all(item["label_checks"]["passed"] and item["usage"] is not None for item in observations)
     report = {"schema_version": 1, "kind": "bailian_live_acceptance", "passed": passed,
               "status": "completed" if passed else "stopped" if failure else "completed_with_quality_or_usage_gaps",
@@ -284,10 +298,11 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
               "budget_review": plan["budget_review"],
               "model": MODEL, "endpoint": ENDPOINT, "enable_thinking": False,
               "approved_budget_cny": specification["approved_budget_cny"], "reserved_cny": specification["reserved_cny"],
-              "reservation_refunded": False, "planned_requests": 4, "request_attempts": attempts,
+              "reservation_refunded": False, "planned_requests": specification["maximum_requests"], "request_attempts": attempts,
+              "selected_case_ids": [request["case_id"] for request in specification["requests"]],
               "validated_responses": len(observations), "cost_estimate_upper_cny": str(sum(estimates, Decimal("0"))) if complete and all(v is not None for v in estimates) else None,
               "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
-              "quality_scope": "Four fixed synthetic positive cases only; failure scenarios remain offline; not human-reviewed correctness or production acceptance.",
+              "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
               "case_sha256": specification["case_sha256"], "source_sha256": specification["source_sha256"],
               "plan_sha256": digest(plan), "observations": observations, "finished_at": datetime.now(timezone.utc).isoformat()}
     write_new(directory / "live-report.json", report)
@@ -303,24 +318,27 @@ def main(argv=None):
     parser.add_argument("--confirm-local", action="store_true")
     parser.add_argument("--confirm-live", action="store_true")
     parser.add_argument("--budget-cny", default="12")
+    parser.add_argument("--case", action="append", dest="case_ids", help="Select a fixed positive case; repeat to select more. Default: all four")
     parser.add_argument("--credential-file", type=Path)
     parser.add_argument("--credential-name")
     args = parser.parse_args(argv)
+    if args.case_ids is not None and (args.execute is not None or args.preflight):
+        parser.error("--case is only allowed with --prepare or --preflight without a frozen plan")
     if args.prepare and not args.confirm_local:
         parser.error("--confirm-local is required to write a new offline plan")
     if args.execute and (not args.confirm_live or args.credential_file is None or not args.credential_name):
         parser.error("Live execution requires --confirm-live and an explicitly named credential file/assignment")
     try:
         if args.preflight is not None:
-            report = preflight(Path(args.preflight) if args.preflight else None, Decimal(args.budget_cny))
+            report = preflight(Path(args.preflight) if args.preflight else None, Decimal(args.budget_cny), args.case_ids)
             print(json.dumps(report, ensure_ascii=False))
             return 0 if report["passed"] else 1
         if args.prepare:
-            path, plan = prepare(Decimal(args.budget_cny))
+            path, plan = prepare(Decimal(args.budget_cny), args.case_ids)
             print(json.dumps({"plan": path.relative_to(ROOT).as_posix(), "spec": plan["spec"], "budget_review": plan["budget_review"]}, ensure_ascii=False))
             return 0
         report = asyncio.run(execute(args.execute, lambda: read_credential(args.credential_file, args.credential_name)))
-        print(json.dumps({key: report[key] for key in ("passed", "status", "failure", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
+        print(json.dumps({key: report[key] for key in ("passed", "status", "failure", "selected_case_ids", "planned_requests", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
         return 0 if report["passed"] else 1
     except Exception:
         parser.exit(2, "Acceptance refused: invalid/expired/changed/used plan, cumulative budget, busy guard or local input. No automatic retry.\n")
