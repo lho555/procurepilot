@@ -1,5 +1,21 @@
 # 开发交接
 
+## Stage 9：显式选定案例与按范围预留（2026-10-19）
+
+- 分支 `feature/scoped-model-acceptance`，从公开 main 创建后快进到 `fe262c2`，依赖 PR #7；沿用功能分支推送与 PR 写入授权，不自动合并 main。已核对 PR #1～#7 的依赖链 / 当前分支均可合并，全部仍未合并；不是独立人工审查或生产验收声明。
+- 新增重复的 `--case`，仅用于候选预检 / 准备所选正例。默认仍四个；只允许固定的四个合成正例，未知 / 重复 / 负例 / 空范围拒绝，按题集固定顺序保存，不自动选择“能付得起”的案例。
+- 请求上限和预留按所选数量计算，版本 2 计划摘要冻结请求列表与次数。冻结计划的预检 / 执行不能附加范围覆盖，修改列表、顺序、次数或降低预留均在领取前拒绝。历史 1～4 案例的领取均按其原预留累计，保留旧账本。
+- 报告 / CLI 明示 selected_case_ids / planned_requests，仅对所选范围计算完成与通过。异常仍停止余下选定案例、不重试、不退款；不修改模型、提示词、约束、默认离线或已有许可范围。
+
+### 本轮实际验证
+
+- 23 项新增回归覆盖合法数量 1～4 的请求 / 领取 / 报告边界、非法范围、冻结后扩大 / 重排 / 降低预留拒绝、与历史预留合计的余额判断、部分失败停止与 CLI 预检 / 准备 / 执行范围明示。
+- 原模块 69 项通过；新增后模块 92 项通过。最终相关模块命令 `python -m pytest backend/tests/test_bailian_acceptance.py backend/tests/test_model_explanation.py backend/tests/test_model_replay.py -q -o pythonpath=backend --basetemp=.local/scoped-targeted-final`：152 项通过。补充 CLI 输出范围检查后最小两项再次通过，最终完整验证包含其最终文件。
+- 现有真实账本只读检查：一个 / 两个案例可预留，三个 / 默认四个因预算不足拒绝。所选 shortage_only + healthy_order 拟预留 2.3902656 元，累计将为 11.9513280 元，若领取后未预留将为 0.0486720 元；实际仍未领取，旧预留 9.5610624 元与未预留 2.4389376 元保持不变。从项目与父目录运行两案例检查结果一致，`.local/scoped-preflight-review.json` 保存完整结果和旧账本摘要。
+- 完整 `python scripts/verify_delivery.py --confirm` 通过：271 项后端测试、12 个模型回放、17 个 Golden Tasks、前端类型检查 / 构建及 3 项 HTTP 启动检查。原始报告 `.local/delivery/277a1627014e4941880c27adc23ac7e1/report.json`；运行源码摘要 `8e4a4135c2c4bd015321128c0f683a9a46312495cda33e33d6500214fe9ffead`。公开摘要见 [scoped-acceptance-20261019.json](docs/evidence/scoped-acceptance-20261019.json)。本轮未新增真实计划 / 领取、未读取现有密钥或调用模型，旧账本逐字节未变；前端、依赖、迁移与业务审批边界未改。
+
+完整离线回归已通过，对应提交跨平台 CI 以 PR 检查为准；审阅后，再确认新的单次在线范围；预检通过不构成调用许可，也不恢复旧计划资格。Stage 9 整体真实验收未完成，Stage 10 未启动；历史第一轮未知计费与第二轮零请求不改写。命令与边界见 [BAILIAN_ACCEPTANCE](docs/BAILIAN_ACCEPTANCE.md#显式选择验收案例)，下方为历史。
+
 ## Stage 9：正式领取前预检与累计预算保护（2026-10-19）
 
 - 分支 `feature/preclaim-budget-check`，从公开 main 创建后快进到 `3364f2d`，依赖 PR #6；沿用功能分支推送与 PR 写入授权，不自动合并 main。

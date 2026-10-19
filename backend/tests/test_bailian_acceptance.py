@@ -337,6 +337,7 @@ def test_cli_reports_only_safe_failure_fields(acceptance, monkeypatch, capsys):
     output = capsys.readouterr()
     report = json.loads(output.out)
     assert report["failure"]["category"] == "transport"
+    assert report["selected_case_ids"] == list(live.CASE_IDS) and report["planned_requests"] == 4
     assert "fixture-sensitive" not in output.out + output.err and not output.err
 
 
@@ -536,3 +537,132 @@ def test_cli_preflight_needs_no_write_or_live_confirmation(acceptance, monkeypat
     assert live.main(["--preflight", "--budget-cny", "12"]) == 1
     assert json.loads(capsys.readouterr().out)["reason"] == "budget_exceeded"
     assert file_snapshot(acceptance) == before
+
+
+@pytest.mark.parametrize("selected", [[], ["shortage_only", "shortage_only"], ["missing_policy"], ["fixture-sensitive-case"], [False], [None], "shortage_only", {"shortage_only": True}])
+def test_invalid_case_scope_is_rejected_before_any_plan_write(acceptance, selected):
+    before = file_snapshot(acceptance)
+    with pytest.raises(ValueError): live.prepare(Decimal("12"), selected)
+    assert file_snapshot(acceptance) == before
+
+
+@pytest.mark.parametrize("count", [1, 2, 3, 4])
+def test_selected_scope_limits_calls_claim_and_report_to_requested_cases(acceptance, count):
+    selected = list(live.CASE_IDS[:count])
+    path, plan = live.prepare(Decimal("12"), selected)
+    cases, calls = live.cases(selected)[0], []
+    def handler(request):
+        case = cases[len(calls)]
+        calls.append(request)
+        return httpx.Response(200, json=response(case))
+    report = asyncio.run(live.execute(path, lambda: "fixture-key", factory(handler)))
+    assert report["passed"] and report["failure"] is None
+    assert report["selected_case_ids"] == selected
+    assert report["planned_requests"] == report["request_attempts"] == report["validated_responses"] == len(calls) == count
+    assert plan["spec"]["reserved_cny"] == report["reserved_cny"] == str(live.PER_CALL * count)
+    assert json.loads((path.parent / "claimed.json").read_text(encoding="utf-8"))["maximum_requests"] == count
+    assert len(list(path.parent.glob("attempt-*.json"))) == count
+    assert [row["case_id"] for row in report["observations"]] == selected
+    assert len(live.claim_inventory()) == 1
+    assert "selected" in report["quality_scope"] and "not full-suite" in report["quality_scope"]
+
+
+def test_selected_cases_have_canonical_order_and_cannot_be_reordered_in_frozen_plan(acceptance):
+    path, plan = live.prepare(Decimal("12"), ["healthy_order", "shortage_only"])
+    expected = ["shortage_only", "healthy_order"]
+    assert [item["case_id"] for item in plan["spec"]["requests"]] == expected
+    assert live.preflight(path)["selected_case_ids"] == expected
+    plan["spec"]["requests"].reverse()
+    path.write_bytes(json.dumps(plan).encode())
+    with pytest.raises(ValueError): live.validate_plan(path)
+    assert not (path.parent / "claimed.json").exists()
+
+
+@pytest.mark.parametrize("mutation", ["expand", "empty", "duplicate", "negative", "reserve", "count"])
+def test_scope_or_reservation_tampering_fails_before_claim_or_credentials(acceptance, mutation):
+    path, plan = live.prepare(Decimal("12"), ["shortage_only"])
+    requests = plan["spec"]["requests"]
+    if mutation == "expand": requests.append(live.spec(Decimal("12"))["requests"][-1])
+    if mutation == "empty": requests.clear()
+    if mutation == "duplicate": requests.append(dict(requests[0]))
+    if mutation == "negative": requests[0]["case_id"] = "missing_policy"
+    if mutation == "reserve": plan["spec"]["reserved_cny"] = "0.00001"
+    if mutation == "count": plan["spec"]["maximum_requests"] = 4
+    path.write_bytes(json.dumps(plan).encode())
+    before = file_snapshot(acceptance)
+    def never(): pytest.fail("Changed scope reached credentials")
+    with pytest.raises(ValueError): asyncio.run(live.execute(path, never))
+    assert file_snapshot(acceptance) == before
+
+
+def test_two_case_scope_fits_remaining_budget_without_releasing_old_claims(acceptance):
+    for _ in range(2):
+        prior, _ = live.prepare(Decimal("12"))
+        live.reserve_plan(prior)
+    before = file_snapshot(acceptance)
+    assert not live.preflight()["passed"]
+    report = live.preflight(case_ids=["shortage_only", "healthy_order"])
+    assert report["passed"] and report["maximum_requests"] == 2
+    assert report["budget_review"]["proposed_reserved_cny"] == "2.3902656"
+    assert report["budget_review"]["aggregate_reserved_cny"] == "11.9513280"
+    assert not live.preflight(case_ids=list(live.CASE_IDS[:3]))["passed"]
+    assert file_snapshot(acceptance) == before
+    candidate, _ = live.prepare(Decimal("12"), ["shortage_only", "healthy_order"])
+    live.reserve_plan(candidate)
+    assert len(live.claim_inventory()) == 3
+    assert not live.preflight(case_ids=["delay_only"])["passed"]
+    for name, value in before.items():
+        target = acceptance / name
+        if value is not None: assert target.read_bytes() == value
+
+
+def test_frozen_scope_cannot_be_overridden_by_preflight_or_execution_cli(acceptance, capsys):
+    path, _ = live.prepare(Decimal("12"), ["shortage_only"])
+    before = file_snapshot(acceptance)
+    with pytest.raises(ValueError): live.preflight(path, case_ids=["healthy_order"])
+    for args in (["--preflight", str(path)], ["--execute", str(path), "--confirm-live", "--credential-file", "fixture-unused", "--credential-name", "KEY"]):
+        with pytest.raises(SystemExit) as refused:
+            live.main([*args, "--case", "healthy_order"])
+        assert refused.value.code == 2
+    assert file_snapshot(acceptance) == before
+    assert "fixture-unused" not in capsys.readouterr().err
+
+
+def test_subset_failure_stops_within_bound_and_retains_full_selected_reservation(acceptance):
+    path, _ = live.prepare(Decimal("12"), ["shortage_only", "healthy_order"])
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json=response(live.cases(["shortage_only"])[0][0])) if len(calls) == 1 else httpx.Response(503, text="fixture-sensitive-error")
+    report = asyncio.run(live.execute(path, lambda: "fixture-key", factory(handler)))
+    assert not report["passed"] and report["status"] == "stopped"
+    assert report["failure"]["case_id"] == "healthy_order"
+    assert report["failure"]["category"] == "provider_http"
+    assert report["planned_requests"] == report["request_attempts"] == len(calls) == 2
+    assert report["validated_responses"] == 1 and report["cost_estimate_upper_cny"] is None
+    assert report["reserved_cny"] == "2.3902656" and not report["reservation_refunded"]
+    with pytest.raises(FileExistsError): live.reserve_plan(path)
+
+
+def test_cli_explicit_case_selection_is_frozen_and_sensitive_unknown_ids_are_not_echoed(acceptance, monkeypatch, capsys):
+    assert live.main(["--preflight", "--case", "healthy_order", "--case", "shortage_only"]) == 0
+    assert json.loads(capsys.readouterr().out)["selected_case_ids"] == ["shortage_only", "healthy_order"]
+    before = file_snapshot(acceptance)
+    with pytest.raises(SystemExit) as refused:
+        live.main(["--preflight", "--case", "fixture-sensitive-case"])
+    assert refused.value.code == 2
+    assert "fixture-sensitive" not in capsys.readouterr().err
+    assert file_snapshot(acceptance) == before
+    assert live.main(["--prepare", "--confirm-local", "--case", "shortage_only"]) == 0
+    output = json.loads(capsys.readouterr().out)
+    path = acceptance / output["plan"]
+    assert output["spec"]["maximum_requests"] == 1
+    assert live.preflight(path)["selected_case_ids"] == ["shortage_only"]
+    execute = live.execute
+    monkeypatch.setattr(live, "read_credential", lambda *args: "fixture-key")
+    def handler(request): return httpx.Response(200, json=response(live.cases(["shortage_only"])[0][0]))
+    monkeypatch.setattr(live, "execute", lambda plan, loader: execute(plan, loader, factory(handler)))
+    assert live.main(["--execute", str(path), "--confirm-live", "--credential-file", "fixture-unused", "--credential-name", "KEY"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["selected_case_ids"] == ["shortage_only"]
+    assert result["planned_requests"] == result["request_attempts"] == 1 and result["passed"]
