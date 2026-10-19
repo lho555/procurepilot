@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "kind": "bailian_live_acceptance",
+  "passed": false,
+  "status": "stopped",
+  "failure": {
+    "category": "credential",
+    "phase": "credential",
+    "case_id": null,
+    "http_status": null
+  },
+  "model": "qwen3.7-flash",
+  "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "enable_thinking": false,
+  "approved_budget_cny": "12",
+  "reserved_cny": "4.7805312",
+  "reservation_refunded": false,
+  "planned_requests": 4,
+  "request_attempts": 0,
+  "validated_responses": 0,
+  "cost_estimate_upper_cny": null,
+  "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+  "quality_scope": "Four fixed synthetic positive cases only; failure scenarios remain offline; not human-reviewed correctness or production acceptance.",
+  "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+  "source_sha256": "d158f51e343f37e779fbfa678ac4243486eb2df4470e9de77b87fc10c80ba401",
+  "plan_sha256": "1c8c1bc8ae2f64c4b66418c8a4dddfe6fcb854c577ba2bdec5c0e85165826aca",
+  "observations": [],
+  "finished_at": "2026-10-19T12:51:53.378014+00:00",
+  "round": 2,
+  "execution_commit": "91200bd362f4730d00c75c8fe3d4eee58b8f0100",
+  "report_sha256": "6c3cbdd0a9f8e2287d58b48990fcce0c78d0f36a73438df6c8d446b2b4415fe2",
+  "review_proposal_sha256": "1eb0fc60590ac55854d1240af234f778609b06afa6d903fcd7621281219db904",
+  "credential_read_reached": false,
+  "new_model_requests": 0,
+  "local_guard_diagnosis": {
+    "cause": "The execution wrapper compared relative claim directory paths to the absolute current-plan directory. It counted the current claim as a prior claim and stopped before reading credentials.",
+    "attribution": "Execution wrapper error; no provider, model-output or credential-validity conclusion.",
+    "verification": "Read-only reproduction confirmed the mismatch; normalized comparison matches the reviewed prior inventory from both working directories.",
+    "fix_scope": "Local read-only checker only; no rerun of the consumed plan, no application source or prompt change."
+  },
+  "budget_reconciliation": {
+    "total_cap_cny": "12",
+    "prior_reserved_cny": "4.7805312",
+    "second_round_reserved_cny": "4.7805312",
+    "aggregate_reserved_cny": "9.5610624",
+    "unreserved_cny": "2.4389376",
+    "both_claims_retained": true,
+    "whole_project_actual_cost_cny": null,
+    "scope": "Local conservative reservation, not actual provider spending. First-round second-request cost is still unknown."
+  },
+  "case_statuses": [
+    {
+      "case_id": "shortage_and_delay",
+      "state": "not_attempted"
+    },
+    {
+      "case_id": "shortage_only",
+      "state": "not_attempted"
+    },
+    {
+      "case_id": "delay_only",
+      "state": "not_attempted"
+    },
+    {
+      "case_id": "healthy_order",
+      "state": "not_attempted"
+    }
+  ]
+}
