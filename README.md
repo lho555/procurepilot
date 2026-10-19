@@ -62,5 +62,6 @@ cd procurepilot
 - [开发与交付验证](docs/DEVELOPMENT.md)
 - [受控模型分析与配置](docs/MODEL_ANALYSIS.md)
 - [模型响应验收与报告](docs/MODEL_EVALUATION.md)
+- [百炼配置与单次验收](docs/BAILIAN_ACCEPTANCE.md)
 
 当前版本使用合成业务数据与固定编排，默认离线分析；可显式配置兼容 Chat Completions 的服务，以结构化输出组织事实和建议。模型接口已提供离线验收，真实服务兼容性与质量尚未实测。执行结果保存在本地，未连接生产业务系统，适合本地运行、流程讲解与工程实现展示。

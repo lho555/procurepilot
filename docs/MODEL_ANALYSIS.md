@@ -30,6 +30,7 @@
 | --- | --- |
 | `PP_LLM_MODE=offline` | 默认离线，不读取专用模型密钥，不连接模型服务 |
 | `PP_LLM_MODE=chat_completions` | 选择兼容 JSON Chat Completions 的接口 |
+| `PP_LLM_PROVIDER=generic` | 默认通用协议；`bailian` 为已核对的北京区 qwen3.7-flash，固定显式关闭思考 |
 | `PP_LLM_ALLOW_SYNTHETIC_SEND=true` | 确认允许将本项目合成事实与制度摘录发送给已选服务；与模型模式同时设置才启用 |
 | `PP_LLM_ENDPOINT` | 完整 `/chat/completions` URL，不允许用户信息、查询参数或片段；远端须 HTTPS，HTTP 仅允许本机回环 |
 | `PP_LLM_MODEL` | 服务支持的具体模型名，应用不自动选择或替换 |
@@ -37,7 +38,7 @@
 
 确定提供方、模型、仅合成数据范围与费用上限后再配置，重启后端使 `.env` 变更生效。选择模型模式后，点击分析或确认创建工作流可能产生一次在线请求；这是服务端配置许可，适用于可信本机使用，不提供多用户身份或计费权限。
 
-请求使用 `response_format=json_object`、`max_completion_tokens=1024` 和 `store=false`，不携带工具定义。服务须支持这些字段以及标准 `choices/message/content/finish_reason` 响应；兼容性须在选择服务后单独验证。接口协议参考 [OpenAI 官方 Chat Completions 文档](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)。`store=false` 是请求参数，不能代替提供方的数据处理约定。
+通用请求使用 `response_format=json_object`、`max_completion_tokens=1024` 和 `store=false`，不携带工具定义。服务须支持这些字段以及标准 `choices/message/content/finish_reason` 响应；兼容性须在选择服务后单独验证。接口协议参考 [OpenAI 官方 Chat Completions 文档](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)。`store=false` 是请求参数，不能代替提供方的数据处理约定。百炼专用配置省略 `store`，在请求顶层固定发送 `enable_thinking=false` 与 `temperature=0`，详见 [百炼单次验收](BAILIAN_ACCEPTANCE.md)。
 
 每次分析最多一次模型请求，不自动重试、不跟随重定向、不继承代理或证书覆盖配置，保持 TLS 校验。模型上下文最多 24,000 UTF-8 字节，HTTP 响应最多 64,000 字节；网络不活动超时 10 秒，模型步骤总上限 12 秒，完整分析仍受 25 秒总超时约束。传输使用已有 HTTPX 依赖，参见 [HTTPX 异步接口](https://www.python-httpx.org/async/) 与[环境变量控制](https://www.python-httpx.org/environment_variables/)。
 
