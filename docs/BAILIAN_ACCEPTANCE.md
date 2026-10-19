@@ -82,3 +82,43 @@ HTTPX 直接请求不需要 `extra_body`。保留 JSON 输出与全部事实 / �
 本轮 `passed=false`，不能用一个通过案例计算成整体 100% 或证明生产可用。第二次错误未记录安全分类，现有证据无法区分传输、服务响应、输出契约或本地处理原因；不将其直接判为模型质量失败。没有重试或追加调用，没有删除领取记录，另外两个案例保持未测量。
 
 公开脱敏证据：[bailian-live-20261019.json](evidence/bailian-live-20261019.json)。它包含受限选择、usage、逐案例标注检查、尝试与未尝试状态，不包含凭据或原始错误。下一步应先离线补充安全失败分类，再复核新的在线执行范围；不通过重新运行本计划寻找成功结果。
+
+
+## 安全失败分类（离线验证）
+
+后续执行若因异常停止，报告与 CLI 摘要增加 `failure` 对象，只允许固定类别、固定阶段、合成案例编号和有界 HTTP 状态码。例如，以下为本地响应替身模拟的限流失败，不是真实服务结果：
+
+```json
+{
+  "category": "provider_http",
+  "phase": "model_request",
+  "case_id": "shortage_only",
+  "http_status": 429
+}
+```
+
+| 类别 | 含义 |
+| --- | --- |
+| `credential` | 指定凭据加载阶段失败，不按异常文字推断网络问题 |
+| `configuration` | 适配器配置被拒绝 |
+| `input_context` | 缺少或超限的事实 / 制度上下文 |
+| `timeout` | 模型请求阶段超时 |
+| `transport` | 模型请求阶段连接或传输失败 |
+| `provider_http` | 收到非 200 HTTP 状态；只保留 100～599 的整数状态码 |
+| `response_limit` | 响应超过本地字节限制 |
+| `output_contract` | JSON、响应结构、完整结束、事实 / 引用 / 建议约束未通过 |
+| `local_processing` | 请求准备、预留落盘、结果检查 / 落盘或未识别的程序异常 |
+
+阶段为 `credential`、`configure_adapter`、`prepare_request`、`reserve_request`、`model_request`、`validate_result` 或 `persist_result`。程序按发生阶段区分失败，避免将本地写盘或评分异常误报为供应商失败；未知异常不按内容猜测根因。HTTP 状态仅在模型请求阶段、明确的服务状态失败中保留，布尔值、超范围值或文本均不输出。
+
+不保存异常文字、异常类名、响应正文、认证头、供应商请求 ID、主机名或凭据路径。正常完成与非异常的质量 / usage 缺口均为 `failure=null`，仍须读取 `passed`、`status` 与逐项检查，不能把 null 当成整体通过。异常仍停止后续调用，不重试、不退款、不重置领取。
+
+预检被拒绝或最终报告无法落盘时仍返回固定 CLI 错误，不能保证存在分类报告；已创建的领取记录仍不能删除重跑。旧报告没有 `failure` 字段，表示该分类未记录，不能解释为成功或事后补推根因。2026-10-19 真实第二次请求继续保持原因未知，既有证据不改写。
+
+离线验证命令：
+
+```powershell
+./.venv/Scripts/python.exe -m pytest backend/tests/test_bailian_acceptance.py backend/tests/test_model_explanation.py backend/tests/test_model_replay.py -q -o pythonpath=backend --basetemp=.local/diagnostics-check-<新目录>
+```
+
+测试显式使用本地 HTTP 响应替身与合成密钥，不读取现有模型凭据或访问模型服务。不得为验证分类而重新执行旧的真实计划。

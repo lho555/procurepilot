@@ -1,5 +1,6 @@
 """Opt-in, bounded model selection over verified facts; never execute model text."""
 import asyncio
+from enum import Enum
 import json
 import os
 from time import monotonic
@@ -9,8 +10,22 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError
 
 
+class ModelFailureKind(str, Enum):
+    INPUT_CONTEXT = "input_context"
+    CONFIGURATION = "configuration"
+    TRANSPORT = "transport"
+    PROVIDER_HTTP = "provider_http"
+    RESPONSE_LIMIT = "response_limit"
+    OUTPUT_CONTRACT = "output_contract"
+
+
 class ModelFailure(Exception):
     """Only application-owned, safe messages may cross this boundary."""
+
+    def __init__(self, message: str, *, kind: ModelFailureKind = ModelFailureKind.OUTPUT_CONTRACT, http_status: int | None = None):
+        super().__init__(message)
+        self.kind = kind
+        self.http_status = http_status
 
 
 class Selection(BaseModel):
@@ -32,7 +47,7 @@ SUGGESTIONS = {
 
 def explanation_context(facts: dict, policy: dict) -> dict:
     if policy.get("found") is not True or not policy.get("citations"):
-        raise ModelFailure("未找到制度依据，已停止模型解释，请人工核实。")
+        raise ModelFailure("未找到制度依据，已停止模型解释，请人工核实。", kind=ModelFailureKind.INPUT_CONTEXT)
     findings = {
         f"stock:{number}": f"{item['sku']}：需求 {item['required']}，可用库存 {item['available']}，参考缺口 {item['shortage']}。"
         for number, item in enumerate(facts["shortages"], 1)
@@ -53,7 +68,7 @@ def explanation_context(facts: dict, policy: dict) -> dict:
                "allowed_recommendations": {code: SUGGESTIONS[code] for code in sorted(allowed)},
                "required_recommendation": "HUMAN_REVIEW" if facts["needs_review"] else "MONITOR"}
     if len(json.dumps(context, ensure_ascii=False).encode()) > 24_000 or len(findings) > 50:
-        raise ModelFailure("事实或制度上下文超出限制，已停止模型解释。")
+        raise ModelFailure("事实或制度上下文超出限制，已停止模型解释。", kind=ModelFailureKind.INPUT_CONTEXT)
     return context
 
 
@@ -91,7 +106,7 @@ def model_endpoint(value: str) -> httpx.URL:
             raise ValueError
         return url
     except (ValueError, httpx.InvalidURL):
-        raise ModelFailure("模型地址无效；请配置 HTTPS 或本机回环的 Chat Completions 地址。") from None
+        raise ModelFailure("模型地址无效；请配置 HTTPS 或本机回环的 Chat Completions 地址。", kind=ModelFailureKind.CONFIGURATION) from None
 
 
 class ChatCompletionsAdapter:
@@ -100,13 +115,13 @@ class ChatCompletionsAdapter:
     def __init__(self, endpoint: str, model: str, api_key: str, *, provider: str = "generic", transport: httpx.AsyncBaseTransport | None = None):
         self.endpoint = model_endpoint(endpoint)
         if provider not in {"generic", "bailian"}:
-            raise ModelFailure("不支持的模型协议配置。")
+            raise ModelFailure("不支持的模型协议配置。", kind=ModelFailureKind.CONFIGURATION)
         if provider == "bailian" and (self.endpoint != httpx.URL("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions") or model != "qwen3.7-flash"):
-            raise ModelFailure("百炼验收配置仅支持已核对的北京区地址与 qwen3.7-flash。")
+            raise ModelFailure("百炼验收配置仅支持已核对的北京区地址与 qwen3.7-flash。", kind=ModelFailureKind.CONFIGURATION)
         if not model.strip() or len(model) > 200 or any(ord(c) < 32 for c in model):
-            raise ModelFailure("请配置有效的模型名称。")
+            raise ModelFailure("请配置有效的模型名称。", kind=ModelFailureKind.CONFIGURATION)
         if (self.endpoint.scheme == "https" and not api_key.strip()) or any(ord(c) < 32 or ord(c) > 126 for c in api_key):
-            raise ModelFailure("请配置有效的专用模型密钥；密钥仅由服务端读取。")
+            raise ModelFailure("请配置有效的专用模型密钥；密钥仅由服务端读取。", kind=ModelFailureKind.CONFIGURATION)
         self.model, self._api_key, self._transport = model, api_key, transport
         self.provider = provider
 
@@ -136,12 +151,12 @@ class ChatCompletionsAdapter:
                 async with httpx.AsyncClient(timeout=10, follow_redirects=False, trust_env=False, transport=self._transport) as client:
                     async with client.stream("POST", self.endpoint, headers=headers, json=body) as response:
                         if response.status_code != 200:
-                            raise ModelFailure("模型服务请求失败，未采用回答；请检查服务配置或额度。")
+                            raise ModelFailure("模型服务请求失败，未采用回答；请检查服务配置或额度。", kind=ModelFailureKind.PROVIDER_HTTP, http_status=response.status_code)
                         raw = bytearray()
                         async for chunk in response.aiter_bytes(chunk_size=8192):
                             raw.extend(chunk)
                             if len(raw) > 64_000:
-                                raise ModelFailure("模型响应超出限制，未采用该回答。")
+                                raise ModelFailure("模型响应超出限制，未采用该回答。", kind=ModelFailureKind.RESPONSE_LIMIT)
             data = json.loads(raw)
             if not isinstance(data, dict):
                 raise ValueError
@@ -173,7 +188,7 @@ class ChatCompletionsAdapter:
         except (httpx.TimeoutException, TimeoutError):
             raise TimeoutError("模型解释超时") from None
         except httpx.HTTPError:
-            raise ModelFailure("模型服务连接失败，未采用该回答。") from None
+            raise ModelFailure("模型服务连接失败，未采用该回答。", kind=ModelFailureKind.TRANSPORT) from None
         except (ValueError, KeyError, TypeError):
             raise ModelFailure("模型响应无效或未完整结束，未采用该回答。") from None
 
@@ -190,11 +205,11 @@ class ConfiguredAdapter:
         if self.mode == "offline":
             return await MockLLMAdapter().summarize(facts, policy)
         if self.mode != "chat_completions" or os.getenv("PP_LLM_ALLOW_SYNTHETIC_SEND") != "true":
-            raise ModelFailure("模型模式未获启用；请确认仅发送合成数据并显式配置服务端开关。")
+            raise ModelFailure("模型模式未获启用；请确认仅发送合成数据并显式配置服务端开关。", kind=ModelFailureKind.CONFIGURATION)
         explanation_context(facts, policy)  # Reject missing/oversized evidence before reading a key.
         provider = os.getenv("PP_LLM_PROVIDER", "generic")
         if provider not in {"generic", "bailian"}:
-            raise ModelFailure("不支持的模型协议配置。")
+            raise ModelFailure("不支持的模型协议配置。", kind=ModelFailureKind.CONFIGURATION)
         options = {"provider": provider} if provider != "generic" else {}
         adapter = ChatCompletionsAdapter(os.getenv("PP_LLM_ENDPOINT", ""), os.getenv("PP_LLM_MODEL", ""), os.getenv("PP_LLM_API_KEY", ""), **options)
         return await adapter.summarize(facts, policy)

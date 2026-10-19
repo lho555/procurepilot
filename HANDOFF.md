@@ -1,5 +1,23 @@
 # 开发交接
 
+## Stage 9：安全失败分类离线补充（2026-10-19）
+
+- 分支 `feature/safe-model-diagnostics`，从公开 main 创建后快进到 `1407153`，依赖 PR #4；沿用功能分支推送 / PR 写入授权，不自动合并 main。
+- 根因是适配器丢失异常类别、验收器又统一捕获。新增 `ModelFailureKind` 固定枚举，保持原有安全消息与异常基类兼容；报告 / CLI 增加 `failure`，只含类别、固定阶段、合成案例编号和有界 HTTP 状态码。
+- 记录凭据、配置、输入、超时、传输、服务状态、响应超限、输出契约与本地处理；凭据阶段超时、评分或写盘失败按阶段保守归类，未知异常不猜测为供应商失败。不序列化异常文字、类名、正文、认证头、主机名、请求 ID 或凭据路径。
+- 异常仍停止后续请求、不重试、不退款。正常完成或非异常的质量 / usage 缺口为 `failure=null`，不能据此推断通过；旧报告无该字段仍表示分类未记录。预检或最终报告不能落盘时仍只返回固定 CLI 错误，领取记录保持有效。
+
+### 本轮实际验证
+
+- 22 项新增回归覆盖连接 / 超时、401 / 429 / 503 / 302、超限 / 无效 / 截断输出、事实约束、凭据 / 配置 / 请求准备 / 预留 / 结果验证 / 结果持久化阶段、异常字段白名单、CLI 脱敏，以及首例成功后第二例失败时保留首例并停止其余请求。
+- `python -m pytest backend/tests/test_bailian_acceptance.py backend/tests/test_model_explanation.py backend/tests/test_model_replay.py -q -o pythonpath=backend --basetemp=.local/safe-diagnostics-targeted`：109 项通过；所有外部请求使用显式 HTTP 响应替身。
+- 完整 `python scripts/verify_delivery.py --confirm` 通过：228 项后端测试、12 个模型回放、17 个 Golden Tasks、前端类型检查 / 构建与 3 项 HTTP 启动检查；原始报告 `.local/delivery/ca476707836a4af4b86cafb32cc62390/report.json`，运行源码摘要 `d158f51e343f37e779fbfa678ac4243486eb2df4470e9de77b87fc10c80ba401`。公开脱敏摘要见 [safe-model-diagnostics-20261019.json](docs/evidence/safe-model-diagnostics-20261019.json)。前端未改，不重复浏览器验收；未增加依赖或迁移。
+- 本轮未读取现有模型凭据、未创建真实调用计划、未调用真实模型。原 claimed.json、live-report.json 和公开真实证据逐字节未变，实际尝试仍为两次；本切片不能补推上次第二次失败的根因或计费。
+
+### 接续
+
+完整离线验收已通过，跨平台 CI 以本提交 PR 检查为准；审阅本切片后再复核新的在线执行范围和累计预算。上轮真实计划永久保留，不重跑、不删记录重置，不将离线分类测试宣称为真实模型验收。Stage 9 整体真实验收未通过，Stage 10 未启动。字段说明见 [BAILIAN_ACCEPTANCE](docs/BAILIAN_ACCEPTANCE.md#安全失败分类离线验证)，下方保留历史。
+
 ## Stage 9 真实验收：一次执行后停止（2026-10-19）
 
 - 用户已明确授权本轮指定凭据内存读取与在线执行。原单次计划通过有效期 / 源码 / 请求摘要 / 未领取检查后，执行一次，领取与整轮预留先于凭据读取。源配置未修改，密钥未打印、复制到项目或写入 Git。

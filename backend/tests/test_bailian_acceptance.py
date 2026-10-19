@@ -8,7 +8,7 @@ import shutil
 import httpx
 import pytest
 
-from app.model_explanation import ChatCompletionsAdapter, ConfiguredAdapter, ModelFailure
+from app.model_explanation import ChatCompletionsAdapter, ConfiguredAdapter, ModelFailure, ModelFailureKind
 from evals import bailian_live as live
 
 
@@ -117,6 +117,7 @@ def test_whole_reservation_precedes_key_and_one_shot_is_enforced(acceptance):
         return httpx.Response(200, json=response(case))
     report = asyncio.run(live.execute(plan, key, factory(handler)))
     assert report["passed"] and report["request_attempts"] == 4 and report["validated_responses"] == 4
+    assert report["failure"] is None
     assert Decimal(report["cost_estimate_upper_cny"]) <= live.RESERVATION
     assert report["reservation_refunded"] is False
     persisted = "".join(p.read_text(encoding="utf-8") for p in plan.parent.glob("*.json"))
@@ -196,6 +197,7 @@ def test_quality_failure_is_reported_without_tuning_or_more_requests(acceptance)
         return httpx.Response(200, json=data)
     report = asyncio.run(live.execute(plan, lambda: "fixture-key", factory(handler)))
     assert not report["passed"] and report["status"] == "completed_with_quality_or_usage_gaps"
+    assert report["failure"] is None
     assert len(calls) == 4 and not report["observations"][0]["label_checks"]["checks"]["citation_applicability"]
 
 
@@ -219,3 +221,117 @@ def test_cli_plan_is_offline_and_execute_requires_explicit_flags(acceptance, mon
     with pytest.raises(SystemExit) as no_live:
         live.main(["--execute", str(acceptance / output["plan"])])
     assert no_live.value.code == 2
+
+
+@pytest.mark.parametrize("event,category,status", [
+    ("connect", "transport", None), ("timeout", "timeout", None),
+    ("401", "provider_http", 401), ("429", "provider_http", 429),
+    ("503", "provider_http", 503), ("302", "provider_http", 302),
+    ("oversize", "response_limit", None), ("invalid_json", "output_contract", None),
+    ("invalid_facts", "output_contract", None), ("truncated", "output_contract", None),
+])
+def test_failure_report_classifies_real_adapter_boundary_without_secret_or_retry(acceptance, event, category, status):
+    path, _ = live.prepare(Decimal("12"))
+    calls = []
+    def handler(request):
+        calls.append(request)
+        if event == "connect": raise httpx.ConnectError("fixture-sensitive-error", request=request)
+        if event == "timeout": raise httpx.ReadTimeout("fixture-sensitive-error", request=request)
+        if event.isdecimal(): return httpx.Response(int(event), text="fixture-sensitive-body", headers={"Location": "https://fixture-sensitive-host.example"})
+        if event == "oversize": return httpx.Response(200, text="fixture-sensitive-body" * 4000)
+        if event == "invalid_json": return httpx.Response(200, text="fixture-sensitive-body")
+        data = response(live.cases()[0][0])
+        if event == "invalid_facts":
+            data["choices"][0]["message"]["content"] = json.dumps({"finding_ids": ["fixture-sensitive-fact"], "citation_numbers": [1], "recommendations": ["HUMAN_REVIEW"]})
+        if event == "truncated": data["choices"][0]["finish_reason"] = "length"
+        return httpx.Response(200, json=data)
+    report = asyncio.run(live.execute(path, lambda: "fixture-sensitive-key", factory(handler)))
+    assert report["failure"] == {"category": category, "phase": "model_request", "case_id": "shortage_and_delay", "http_status": status}
+    assert report["status"] == "stopped" and not report["passed"]
+    assert len(calls) == report["request_attempts"] == 1 and report["validated_responses"] == 0
+    assert report["cost_estimate_upper_cny"] is None and report["reserved_cny"] == "4.7805312"
+    persisted = "".join(p.read_text(encoding="utf-8") for p in path.parent.glob("*.json"))
+    assert "fixture-sensitive" not in persisted and "ConnectError" not in persisted and "ReadTimeout" not in persisted
+    with pytest.raises(FileExistsError):
+        asyncio.run(live.execute(path, lambda: pytest.fail("Second credential read"), factory(handler)))
+    assert len(calls) == 1
+
+
+def test_second_case_failure_preserves_first_observation_and_stops_remaining_cases(acceptance):
+    path, _ = live.prepare(Decimal("12"))
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json=response(live.cases()[0][0])) if len(calls) == 1 else httpx.Response(429, text="fixture-sensitive-body")
+    report = asyncio.run(live.execute(path, lambda: "fixture-key", factory(handler)))
+    assert report["failure"] == {"category": "provider_http", "phase": "model_request", "case_id": "shortage_only", "http_status": 429}
+    assert len(calls) == report["request_attempts"] == 2 and report["validated_responses"] == 1
+    assert report["observations"][0]["label_checks"]["passed"]
+    assert report["cost_estimate_upper_cny"] is None and not report["reservation_refunded"]
+    assert not (path.parent / "attempt-delay_only.json").exists()
+
+
+@pytest.mark.parametrize("phase,category,attempts", [
+    ("credential", "credential", 0), ("configure_adapter", "configuration", 0),
+    ("prepare_request", "local_processing", 0), ("reserve_request", "local_processing", 0),
+    ("validate_result", "local_processing", 1), ("persist_result", "local_processing", 1),
+    ("model_request", "local_processing", 1),
+])
+def test_local_failures_keep_phase_and_never_claim_provider_failure(acceptance, monkeypatch, phase, category, attempts):
+    path, _ = live.prepare(Decimal("12"))
+    calls = []
+    def key():
+        if phase == "credential": raise TimeoutError("fixture-sensitive-file")
+        return "fixture-key"
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json=response(live.cases()[0][0]))
+    def fail(*args, **kwargs): raise RuntimeError("fixture-sensitive-runtime")
+    def build(*args, **kwargs):
+        if phase == "configure_adapter": return ChatCompletionsAdapter(live.ENDPOINT, "invalid", "fixture-key", provider="bailian")
+        adapter = factory(handler)(*args, **kwargs)
+        if phase == "prepare_request": adapter.request_body = fail
+        if phase == "model_request":
+            async def unknown(*args): raise RuntimeError("fixture-sensitive-runtime")
+            adapter.explain = unknown
+        return adapter
+    write = live.write_new
+    def persist(target, value):
+        if (phase == "reserve_request" and target.name.startswith("attempt-")) or (phase == "persist_result" and target.name.startswith("result-")):
+            raise OSError("fixture-sensitive-file")
+        write(target, value)
+    monkeypatch.setattr(live, "write_new", persist)
+    if phase == "validate_result":
+        async def invalid_local_result(*args):
+            raise ModelFailure("fixture-sensitive-local", kind=ModelFailureKind.PROVIDER_HTTP, http_status=503)
+        monkeypatch.setattr(live, "evaluate_case", invalid_local_result)
+    report = asyncio.run(live.execute(path, key, build))
+    assert report["failure"] == {"category": category, "phase": phase, "case_id": None if attempts == 0 and phase in {"credential", "configure_adapter"} else "shortage_and_delay", "http_status": None}
+    assert report["request_attempts"] == attempts and report["validated_responses"] == 0
+    assert len(calls) == (0 if phase == "model_request" else attempts)
+    assert report["status"] == "stopped" and report["reserved_cny"] == "4.7805312"
+    persisted = "".join(p.read_text(encoding="utf-8") for p in path.parent.glob("*.json"))
+    assert "fixture-sensitive" not in persisted
+
+
+@pytest.mark.parametrize("status", [True, 700, "fixture-sensitive-status"])
+def test_failure_metadata_is_allowlisted_even_when_exception_attributes_are_invalid(status):
+    error = ModelFailure("fixture-sensitive-error", kind=ModelFailureKind.PROVIDER_HTTP, http_status=status)
+    result = live.safe_failure(error, "model_request", live.CASE_IDS[0])
+    assert result["category"] == "provider_http" and result["http_status"] is None
+    error.kind = "fixture-sensitive-category"
+    assert live.safe_failure(error, "model_request", live.CASE_IDS[0])["category"] == "local_processing"
+    assert "fixture-sensitive" not in json.dumps(result)
+
+
+def test_cli_reports_only_safe_failure_fields(acceptance, monkeypatch, capsys):
+    path, _ = live.prepare(Decimal("12"))
+    execute = live.execute
+    monkeypatch.setattr(live, "read_credential", lambda *args: "fixture-sensitive-key")
+    def handler(request): raise httpx.ConnectError("fixture-sensitive-host", request=request)
+    monkeypatch.setattr(live, "execute", lambda plan, loader: execute(plan, loader, factory(handler)))
+    assert live.main(["--execute", str(path), "--confirm-live", "--credential-file", "unused-fixture", "--credential-name", "KEY"]) == 1
+    output = capsys.readouterr()
+    report = json.loads(output.out)
+    assert report["failure"]["category"] == "transport"
+    assert "fixture-sensitive" not in output.out + output.err and not output.err
