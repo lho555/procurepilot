@@ -1,9 +1,12 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import json
 from pathlib import Path
 import shutil
+from threading import Barrier, local
 
 import httpx
 import pytest
@@ -335,3 +338,201 @@ def test_cli_reports_only_safe_failure_fields(acceptance, monkeypatch, capsys):
     report = json.loads(output.out)
     assert report["failure"]["category"] == "transport"
     assert "fixture-sensitive" not in output.out + output.err and not output.err
+
+
+def file_snapshot(root):
+    return {p.relative_to(root).as_posix(): p.read_bytes() if p.is_file() else None for p in root.rglob("*")}
+
+
+def test_preflight_is_repeatable_without_plan_key_network_or_writes(acceptance, monkeypatch):
+    def never(*args, **kwargs): pytest.fail("Read-only preflight touched credentials or network")
+    monkeypatch.setattr(live, "read_credential", never)
+    monkeypatch.setattr(httpx, "AsyncClient", never)
+    before = file_snapshot(acceptance)
+    first, second = live.preflight(), live.preflight()
+    assert first == second and first["passed"] and first["reason"] is None
+    assert not first["writes"] and not first["credential_reads"] and first["live_model_requests"] == 0
+    assert before == file_snapshot(acceptance) and not (acceptance / ".local").exists()
+
+
+def test_plan_preflight_paths_are_root_relative_from_another_working_directory(acceptance, monkeypatch):
+    path, _ = live.prepare(Decimal("12"))
+    relative = path.relative_to(acceptance)
+    before = file_snapshot(acceptance)
+    monkeypatch.chdir(acceptance.parent)
+    assert live.preflight(relative) == live.preflight(path)
+    assert live.validate_plan(relative)[0] == path
+    assert file_snapshot(acceptance) == before
+
+
+def test_inventory_excludes_current_claim_for_both_path_forms_after_cwd_change(acceptance, monkeypatch):
+    first, _ = live.prepare(Decimal("12"))
+    live.reserve_plan(first)
+    second, _ = live.prepare(Decimal("12"))
+    live.reserve_plan(second)
+    monkeypatch.chdir(acceptance.parent)
+    expected = [row for row in live.claim_inventory() if row["plan_id"] == first.parent.name]
+    assert len(expected) == 1
+    assert live.claim_inventory(second.parent) == live.claim_inventory(second.parent.relative_to(acceptance)) == expected
+
+
+def test_two_historical_reservations_block_new_plan_without_consuming_anything(acceptance):
+    for _ in range(2):
+        path, _ = live.prepare(Decimal("12"))
+        live.reserve_plan(path)
+    before = file_snapshot(acceptance)
+    report = live.preflight()
+    assert not report["passed"] and report["reason"] == "budget_exceeded"
+    assert report["budget_review"]["prior_reserved_cny"] == "9.5610624"
+    assert report["budget_review"]["aggregate_reserved_cny"] == "14.3415936"
+    assert report["budget_review"]["unreserved_before_claim_cny"] == "2.4389376"
+    with pytest.raises(ValueError): live.prepare(Decimal("12"))
+    assert file_snapshot(acceptance) == before
+
+
+def test_changed_inventory_refuses_unused_plan_before_new_claim_or_key(acceptance):
+    stale, _ = live.prepare(Decimal("12"))
+    other, _ = live.prepare(Decimal("12"))
+    live.reserve_plan(other)
+    before = file_snapshot(acceptance)
+    def never(): pytest.fail("Changed inventory reached credential access")
+    with pytest.raises(ValueError): asyncio.run(live.execute(stale, never))
+    assert file_snapshot(acceptance) == before and not (stale.parent / "claimed.json").exists()
+
+
+@pytest.mark.parametrize("corruption", ["invalid_json", "boolean_amount", "nan_amount", "changed_amount", "wrong_digest", "oversize", "missing_plan"])
+def test_corrupt_history_fails_before_consuming_an_unused_plan(acceptance, corruption):
+    prior, _ = live.prepare(Decimal("12"))
+    live.reserve_plan(prior)
+    candidate, _ = live.prepare(Decimal("12"))
+    record = prior.parent / "claimed.json"
+    data = json.loads(record.read_text(encoding="utf-8"))
+    if corruption == "invalid_json": record.write_bytes(b"fixture-sensitive-invalid-json")
+    elif corruption == "oversize": record.write_bytes(b"x" * 10_001)
+    elif corruption == "missing_plan": prior.unlink()
+    else:
+        if corruption == "boolean_amount": data["reserved_cny"] = True
+        if corruption == "nan_amount": data["reserved_cny"] = "NaN"
+        if corruption == "changed_amount": data["reserved_cny"] = "0.0001"
+        if corruption == "wrong_digest": data["plan_sha256"] = "fixture-sensitive-digest"
+        record.write_bytes(json.dumps(data).encode())
+    before = file_snapshot(acceptance)
+    def never(): pytest.fail("Corrupt ledger reached credential access")
+    with pytest.raises((ValueError, FileNotFoundError)): asyncio.run(live.execute(candidate, never))
+    assert file_snapshot(acceptance) == before and not (candidate.parent / "claimed.json").exists()
+
+
+def test_budget_inventory_is_rechecked_inside_claim_guard(acceptance, monkeypatch):
+    prior, _ = live.prepare(Decimal("12"))
+    live.reserve_plan(prior)
+    candidate, _ = live.prepare(Decimal("12"))
+    original_guard = live.claim_guard
+    @contextmanager
+    def change_after_first_check():
+        with original_guard():
+            record = prior.parent / "claimed.json"
+            data = json.loads(record.read_text(encoding="utf-8"))
+            data["claimed_at"] = "2000-01-01T00:00:00+00:00"
+            record.write_bytes(json.dumps(data).encode())
+            yield
+    monkeypatch.setattr(live, "claim_guard", change_after_first_check)
+    def never(): pytest.fail("Changed ledger under guard reached key")
+    with pytest.raises(ValueError): asyncio.run(live.execute(candidate, never))
+    assert not (candidate.parent / "claimed.json").exists()
+    assert not (acceptance / ".local/bailian-claim.lock").exists()
+
+
+def test_two_threads_cannot_claim_different_plans_from_the_same_review(acceptance, monkeypatch):
+    paths = [live.prepare(Decimal("12"))[0] for _ in range(2)]
+    original, barrier, state = live.validate_plan, Barrier(2), local()
+    def synchronized(path):
+        result = original(path)
+        if not getattr(state, "checked", False):
+            state.checked = True
+            barrier.wait(timeout=5)
+        return result
+    monkeypatch.setattr(live, "validate_plan", synchronized)
+    def reserve(path):
+        try: return live.reserve_plan(path)
+        except (ValueError, FileExistsError) as error: return error
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        outcomes = list(workers.map(reserve, paths))
+    assert sum(isinstance(outcome, tuple) for outcome in outcomes) == 1
+    assert len(live.claim_inventory()) == 1
+    assert sum((path.parent / "claimed.json").exists() for path in paths) == 1
+    assert not (acceptance / ".local/bailian-claim.lock").exists()
+
+
+def test_foreign_guard_blocks_before_claim_and_is_never_removed(acceptance):
+    path, _ = live.prepare(Decimal("12"))
+    lock = acceptance / ".local/bailian-claim.lock"
+    lock.write_bytes(b'{"owner":"fixture-sensitive-other-process"}')
+    before = file_snapshot(acceptance)
+    assert live.preflight(path)["reason"] == "claim_lock_present"
+    def never(): pytest.fail("Busy guard reached key")
+    with pytest.raises(FileExistsError): asyncio.run(live.execute(path, never))
+    assert file_snapshot(acceptance) == before
+
+
+def test_incomplete_claim_write_is_retained_and_never_reaches_key(acceptance, monkeypatch):
+    path, _ = live.prepare(Decimal("12"))
+    original = live.write_new
+    def interrupted(target, value):
+        if target.name == "claimed.json":
+            target.write_bytes(b'{"partial":')
+            raise OSError("fixture-sensitive-disk-error")
+        original(target, value)
+    monkeypatch.setattr(live, "write_new", interrupted)
+    def never(): pytest.fail("Failed claim write reached key")
+    with pytest.raises(OSError): asyncio.run(live.execute(path, never))
+    assert (path.parent / "claimed.json").read_bytes() == b'{"partial":'
+    assert not (acceptance / ".local/bailian-claim.lock").exists()
+    with pytest.raises(FileExistsError): asyncio.run(live.execute(path, never))
+
+
+def test_guard_cleanup_does_not_remove_a_different_owner(acceptance):
+    live.prepare(Decimal("12"))
+    path = acceptance / ".local/bailian-claim.lock"
+    with pytest.raises(ValueError):
+        with live.claim_guard(): path.write_bytes(b'{"owner":"other-owner"}')
+    assert path.read_bytes() == b'{"owner":"other-owner"}'
+
+
+def test_legacy_claim_is_counted_without_migrating_or_reusing_it(acceptance):
+    path, plan = live.prepare(Decimal("12"))
+    plan["schema_version"] = 1
+    plan.pop("budget_review")
+    path.write_bytes(json.dumps(plan).encode())
+    live.write_new(path.parent / "claimed.json", {"plan_sha256": live.digest(plan), "reserved_cny": str(live.RESERVATION),
+                   "maximum_requests": 4, "claimed_at": datetime.now(timezone.utc).isoformat()})
+    before = file_snapshot(acceptance)
+    assert live.preflight()["budget_review"]["prior_reserved_cny"] == str(live.RESERVATION)
+    with pytest.raises(FileExistsError): live.validate_plan(path)
+    assert file_snapshot(acceptance) == before
+
+
+def test_unused_legacy_plan_is_refused_before_claim(acceptance):
+    path, data = live.prepare(Decimal("12"))
+    data["schema_version"] = 1
+    data.pop("budget_review")
+    path.write_bytes(json.dumps(data).encode())
+    before = file_snapshot(acceptance)
+    with pytest.raises(ValueError): live.validate_plan(path)
+    assert file_snapshot(acceptance) == before
+
+
+def test_cli_preflight_needs_no_write_or_live_confirmation(acceptance, monkeypatch, capsys):
+    def never(*args): pytest.fail("Preflight read credentials")
+    monkeypatch.setattr(live, "read_credential", never)
+    before = file_snapshot(acceptance)
+    assert live.main(["--preflight"]) == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["mode"] == "offline_preflight" and not output["writes"]
+    assert file_snapshot(acceptance) == before
+    for _ in range(2):
+        path, _ = live.prepare(Decimal("12"))
+        live.reserve_plan(path)
+    before = file_snapshot(acceptance)
+    assert live.main(["--preflight", "--budget-cny", "12"]) == 1
+    assert json.loads(capsys.readouterr().out)["reason"] == "budget_exceeded"
+    assert file_snapshot(acceptance) == before
