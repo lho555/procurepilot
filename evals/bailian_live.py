@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from dotenv import dotenv_values
 
-from app.model_explanation import ChatCompletionsAdapter
+from app.model_explanation import ChatCompletionsAdapter, ModelFailure, ModelFailureKind
 from evals.model_replay import ResponseRecord, Suite, evaluate_case
 from scripts.verify_delivery import source_manifest
 
@@ -112,6 +112,22 @@ def read_credential(path, name):
     return key
 
 
+def safe_failure(error, phase, case_id):
+    """Closed fields only: never persist exception text, class names or bodies."""
+    category, status = "local_processing", None
+    if phase == "credential":
+        category = "credential"
+    elif phase in {"configure_adapter", "prepare_request", "model_request"}:
+        if phase == "model_request" and isinstance(error, TimeoutError):
+            category = "timeout"
+        elif isinstance(error, ModelFailure) and type(error.kind) is ModelFailureKind:
+            category = error.kind.value
+            if (phase == "model_request" and error.kind == ModelFailureKind.PROVIDER_HTTP
+                    and type(error.http_status) is int and 100 <= error.http_status <= 599):
+                status = error.http_status
+    return {"category": category, "phase": phase, "case_id": case_id, "http_status": status}
+
+
 async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
     path, plan = validate_plan(path)
     directory, specification = path.parent, plan["spec"]
@@ -119,17 +135,24 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
     # Never delete/reset this claim or infer that a timed-out request was free.
     write_new(directory / "claimed.json", {"plan_sha256": digest(plan), "reserved_cny": specification["reserved_cny"],
                                            "maximum_requests": 4, "claimed_at": datetime.now(timezone.utc).isoformat()})
-    observations, estimates, attempts, stopped = [], [], 0, None
+    observations, estimates, attempts, failure = [], [], 0, None
+    phase, case_id = "credential", None
     try:
         key = key_loader()
+        phase = "configure_adapter"
         adapter = adapter_factory(ENDPOINT, MODEL, key, provider="bailian")
+        phase = "prepare_request"
         for case, request in zip(cases()[0], specification["requests"], strict=True):
+            phase, case_id = "prepare_request", case.id
             if digest(adapter.request_body(*case.inputs())) != request["body_sha256"]:
                 raise ValueError("Request changed")
+            phase = "reserve_request"
             write_new(directory / f"attempt-{case.id}.json", {"case_id": case.id, "body_sha256": request["body_sha256"],
                        "reserved_cny": str(PER_CALL), "state": "reserved_before_request"})
             attempts += 1
+            phase = "model_request"
             result = await adapter.explain(*case.inputs())
+            phase = "validate_result"
             # Reconstruct only verified selection fields. No raw response/error,
             # request headers, credential path or key enters persisted evidence.
             response = {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": json.dumps(result["selection"])}}]}
@@ -139,17 +162,19 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
             observation = {"case_id": case.id, "http_success": True, "request_elapsed_ms": result["request_elapsed_ms"],
                            "usage": usage, "cost_estimate_upper_cny": str(estimate) if estimate is not None else None,
                            "selection": result["selection"], "label_checks": row}
+            phase = "persist_result"
             write_new(directory / f"result-{case.id}.json", observation)
             observations.append(observation)
             estimates.append(estimate)
-    except Exception:
+    except Exception as error:
         # Missing credentials, provider failures and uncertain outcomes retain
         # the entire reservation. Never log the original exception or retry.
-        stopped = "acceptance_stopped_without_retry"
+        failure = safe_failure(error, phase, case_id)
     complete = len(observations) == 4
     passed = complete and all(item["label_checks"]["passed"] and item["usage"] is not None for item in observations)
     report = {"schema_version": 1, "kind": "bailian_live_acceptance", "passed": passed,
-              "status": "completed" if passed else "stopped" if stopped else "completed_with_quality_or_usage_gaps",
+              "status": "completed" if passed else "stopped" if failure else "completed_with_quality_or_usage_gaps",
+              "failure": failure,
               "model": MODEL, "endpoint": ENDPOINT, "enable_thinking": False,
               "approved_budget_cny": specification["approved_budget_cny"], "reserved_cny": specification["reserved_cny"],
               "reservation_refunded": False, "planned_requests": 4, "request_attempts": attempts,
@@ -183,7 +208,7 @@ def main(argv=None):
             print(json.dumps({"plan": path.relative_to(ROOT).as_posix(), "spec": plan["spec"]}, ensure_ascii=False))
             return 0
         report = asyncio.run(execute(args.execute, lambda: read_credential(args.credential_file, args.credential_name)))
-        print(json.dumps({key: report[key] for key in ("passed", "status", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
+        print(json.dumps({key: report[key] for key in ("passed", "status", "failure", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
         return 0 if report["passed"] else 1
     except Exception:
         parser.exit(2, "Acceptance refused: invalid/expired/changed/used plan, budget or local input. No automatic retry.\n")
