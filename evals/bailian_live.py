@@ -1,6 +1,7 @@
 """Prepare and execute one bounded, explicitly approved Bailian acceptance plan."""
 import argparse
 import asyncio
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import hashlib
@@ -52,6 +53,66 @@ def fingerprint():
     return source_manifest(ROOT)["sha256"]
 
 
+def acceptance_root():
+    base = (ROOT / ".local/bailian-acceptance").resolve()
+    if not base.is_relative_to(ROOT.resolve()):
+        raise ValueError("Acceptance directory must remain in the project")
+    return base
+
+
+def bounded_bytes(path, limit):
+    if path.is_symlink():
+        raise ValueError("Linked acceptance records are not supported")
+    with path.open("rb") as source:
+        raw = source.read(limit + 1)
+    if len(raw) > limit:
+        raise ValueError("Acceptance record exceeds limit")
+    return raw
+
+
+def claim_inventory(exclude=None):
+    """Root-relative and absolute paths have identical, bounded ledger reads."""
+    base = acceptance_root()
+    excluded = (ROOT / exclude).resolve() if exclude is not None else None
+    if excluded is not None and excluded.parent != base:
+        raise ValueError("Excluded plan must belong to this project")
+    rows = []
+    for path in sorted(base.glob("*/claimed.json")):
+        if path.parent.resolve() != path.parent or path.parent.is_symlink():
+            raise ValueError("Linked claim directories are not supported")
+        if path.parent.resolve() == excluded:
+            continue
+        if not re.fullmatch(r"[0-9a-f]{32}", path.parent.name):
+            raise ValueError("Invalid claim directory")
+        raw = bounded_bytes(path, 10_000)
+        claim = json.loads(raw)
+        if not isinstance(claim, dict) or set(claim) != {"plan_sha256", "reserved_cny", "maximum_requests", "claimed_at"}:
+            raise ValueError("Invalid historical claim")
+        if type(claim["reserved_cny"]) is not str:
+            raise ValueError("Invalid historical reservation")
+        amount = Decimal(claim["reserved_cny"])
+        if not amount.is_finite() or not Decimal("0") < amount <= Decimal("12"):
+            raise ValueError("Invalid historical reservation")
+        historical = json.loads(bounded_bytes(path.parent / "plan.json", 100_000))
+        if (digest(historical) != claim["plan_sha256"]
+                or type(claim["maximum_requests"]) is not int or claim["maximum_requests"] != 4
+                or historical["spec"]["maximum_requests"] != claim["maximum_requests"]
+                or historical["spec"]["reserved_cny"] != claim["reserved_cny"]):
+            raise ValueError("Historical claim does not match its plan")
+        rows.append({"plan_id": path.parent.name, "claim_sha256": hashlib.sha256(raw).hexdigest(),
+                     "reserved_cny": claim["reserved_cny"]})
+    return rows
+
+
+def budget_review(specification):
+    claims = claim_inventory()
+    prior = sum((Decimal(row["reserved_cny"]) for row in claims), Decimal("0"))
+    cap, proposed = (Decimal(specification[key]) for key in ("approved_budget_cny", "reserved_cny"))
+    return {"prior_claims": claims, "prior_reserved_cny": str(prior), "proposed_reserved_cny": str(proposed),
+            "aggregate_reserved_cny": str(prior + proposed), "total_cap_cny": str(cap),
+            "unreserved_before_claim_cny": str(cap - prior), "can_claim": prior + proposed <= cap}
+
+
 def spec(budget):
     if not budget.is_finite() or not RESERVATION <= budget <= Decimal("12"):
         raise ValueError("Budget must cover the fixed reservation and cannot exceed 12 CNY")
@@ -69,8 +130,12 @@ def spec(budget):
 
 def prepare(budget):
     specification = spec(budget)
+    review = budget_review(specification)
+    if not review["can_claim"] or os.path.lexists(ROOT / ".local/bailian-claim.lock"):
+        raise ValueError("Budget or claim guard prevents a new plan")
     now = datetime.now(timezone.utc)
-    plan = {"schema_version": 1, "created_at": now.isoformat(), "expires_at": (now + timedelta(hours=24)).isoformat(), "spec": specification}
+    plan = {"schema_version": 2, "created_at": now.isoformat(), "expires_at": (now + timedelta(hours=24)).isoformat(),
+            "spec": specification, "budget_review": review}
     directory = ROOT / ".local/bailian-acceptance" / uuid4().hex
     directory.mkdir(parents=True)
     write_new(directory / "plan.json", plan)
@@ -78,20 +143,63 @@ def prepare(budget):
 
 
 def validate_plan(path):
-    path = path.resolve()
-    base = (ROOT / ".local/bailian-acceptance").resolve()
-    if not path.is_relative_to(base) or path.name != "plan.json" or path.parent.parent != base:
+    path = (ROOT / path).resolve()
+    base = acceptance_root()
+    if (not path.is_relative_to(base) or path.name != "plan.json" or path.parent.parent != base
+            or not re.fullmatch(r"[0-9a-f]{32}", path.parent.name)):
         raise ValueError("Plan must be in a project-owned acceptance directory")
-    if path.stat().st_size > 100_000:
-        raise ValueError("Plan exceeds limit")
-    plan = json.loads(path.read_text(encoding="utf-8"))
-    if set(plan) != {"schema_version", "created_at", "expires_at", "spec"} or plan["schema_version"] != 1:
+    if (path.parent / "claimed.json").exists():
+        raise FileExistsError("Plan is already claimed")
+    plan = json.loads(bounded_bytes(path, 100_000))
+    if (set(plan) != {"schema_version", "created_at", "expires_at", "spec", "budget_review"}
+            or type(plan["schema_version"]) is not int or plan["schema_version"] != 2):
         raise ValueError("Invalid plan")
     created, expires = (datetime.fromisoformat(plan[key]) for key in ("created_at", "expires_at"))
     if not created <= datetime.now(timezone.utc) <= expires or expires - created != timedelta(hours=24):
         raise ValueError("Plan expired or invalid")
-    if plan["spec"] != spec(Decimal(plan["spec"]["approved_budget_cny"])):
+    if digest(plan["spec"]) != digest(spec(Decimal(plan["spec"]["approved_budget_cny"]))):
         raise ValueError("Plan, source or request fingerprint changed")
+    review = budget_review(plan["spec"])
+    if not review["can_claim"] or digest(plan["budget_review"]) != digest(review):
+        raise ValueError("Historical claims or cumulative budget changed")
+    return path, plan
+
+
+def preflight(path=None, budget=Decimal("12")):
+    """Read-only diagnostic; success is neither authorization nor a claim."""
+    if path is None:
+        specification = spec(budget)
+        review = budget_review(specification)
+    else:
+        _, plan = validate_plan(path)
+        specification, review = plan["spec"], plan["budget_review"]
+    locked = os.path.lexists(ROOT / ".local/bailian-claim.lock")
+    return {"mode": "offline_preflight", "passed": review["can_claim"] and not locked,
+            "reason": "claim_lock_present" if locked else None if review["can_claim"] else "budget_exceeded",
+            "source_sha256": specification["source_sha256"], "budget_review": review,
+            "writes": False, "credential_reads": False, "live_model_requests": 0}
+
+
+@contextmanager
+def claim_guard():
+    lock = ROOT / ".local/bailian-claim.lock"
+    owner = {"owner": uuid4().hex}
+    write_new(lock, owner)
+    try:
+        yield
+    finally:
+        # Never remove an unknown/stale owner's guard or any claim record.
+        if lock.is_symlink() or json.loads(bounded_bytes(lock, 1000)) != owner:
+            raise ValueError("Claim guard ownership changed")
+        lock.unlink()
+
+
+def reserve_plan(path):
+    validate_plan(path)  # Fail without even creating a transient guard.
+    with claim_guard():
+        path, plan = validate_plan(path)  # Recheck under the project-wide guard.
+        write_new(path.parent / "claimed.json", {"plan_sha256": digest(plan), "reserved_cny": plan["spec"]["reserved_cny"],
+                                                "maximum_requests": 4, "claimed_at": datetime.now(timezone.utc).isoformat()})
     return path, plan
 
 
@@ -129,12 +237,10 @@ def safe_failure(error, phase, case_id):
 
 
 async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
-    path, plan = validate_plan(path)
+    path, plan = reserve_plan(path)
     directory, specification = path.parent, plan["spec"]
     # Exclusive, persistent whole-run reservation precedes credential access.
     # Never delete/reset this claim or infer that a timed-out request was free.
-    write_new(directory / "claimed.json", {"plan_sha256": digest(plan), "reserved_cny": specification["reserved_cny"],
-                                           "maximum_requests": 4, "claimed_at": datetime.now(timezone.utc).isoformat()})
     observations, estimates, attempts, failure = [], [], 0, None
     phase, case_id = "credential", None
     try:
@@ -175,6 +281,7 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
     report = {"schema_version": 1, "kind": "bailian_live_acceptance", "passed": passed,
               "status": "completed" if passed else "stopped" if failure else "completed_with_quality_or_usage_gaps",
               "failure": failure,
+              "budget_review": plan["budget_review"],
               "model": MODEL, "endpoint": ENDPOINT, "enable_thinking": False,
               "approved_budget_cny": specification["approved_budget_cny"], "reserved_cny": specification["reserved_cny"],
               "reservation_refunded": False, "planned_requests": 4, "request_attempts": attempts,
@@ -191,6 +298,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--prepare", action="store_true")
+    mode.add_argument("--preflight", nargs="?", const="", metavar="PLAN", help="Read-only budget check, optionally for an unused plan")
     mode.add_argument("--execute", type=Path)
     parser.add_argument("--confirm-local", action="store_true")
     parser.add_argument("--confirm-live", action="store_true")
@@ -203,12 +311,16 @@ def main(argv=None):
     if args.execute and (not args.confirm_live or args.credential_file is None or not args.credential_name):
         parser.error("Live execution requires --confirm-live and an explicitly named credential file/assignment")
     try:
+        if args.preflight is not None:
+            report = preflight(Path(args.preflight) if args.preflight else None, Decimal(args.budget_cny))
+            print(json.dumps(report, ensure_ascii=False))
+            return 0 if report["passed"] else 1
         if args.prepare:
             path, plan = prepare(Decimal(args.budget_cny))
-            print(json.dumps({"plan": path.relative_to(ROOT).as_posix(), "spec": plan["spec"]}, ensure_ascii=False))
+            print(json.dumps({"plan": path.relative_to(ROOT).as_posix(), "spec": plan["spec"], "budget_review": plan["budget_review"]}, ensure_ascii=False))
             return 0
         report = asyncio.run(execute(args.execute, lambda: read_credential(args.credential_file, args.credential_name)))
         print(json.dumps({key: report[key] for key in ("passed", "status", "failure", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
         return 0 if report["passed"] else 1
     except Exception:
-        parser.exit(2, "Acceptance refused: invalid/expired/changed/used plan, budget or local input. No automatic retry.\n")
+        parser.exit(2, "Acceptance refused: invalid/expired/changed/used plan, cumulative budget, busy guard or local input. No automatic retry.\n")
