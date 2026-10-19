@@ -1,5 +1,16 @@
 # 开发交接
 
+## Stage 9 真实验收：一次执行后停止（2026-10-19）
+
+- 用户已明确授权本轮指定凭据内存读取与在线执行。原单次计划通过有效期 / 源码 / 请求摘要 / 未领取检查后，执行一次，领取与整轮预留先于凭据读取。源配置未修改，密钥未打印、复制到项目或写入 Git。
+- 执行源码提交 `0ecb97cd02546c56ba4192b0ae4bc978ac549cb9`，运行源码摘要仍为 `d1f96f053b8e1afa641ea2e5848cb31bff7096540c88f57f2b61793fcaf930fe`。该源码的 206 项后端测试、12 个模型回放、17 个 Golden Tasks、前端构建和 3 项启动检查已通过，Windows / Ubuntu [CI #5](https://github.com/lho555/procurepilot/actions/runs/39185294487) 也通过；本次更新仅为文档与脱敏证据。
+- 最多四个固定正例，实际尝试两次：`shortage_and_delay` 通过契约与题集标注；`shortage_only` 未形成可验证结果后停止；`delay_only` 和 `healthy_order` 未发送。所有请求显式关闭思考，没有重试、探测、重置领取或新建替代计划。
+- 首例端到端 2085.068 ms，输入 538 / 输出 73 Token，按核对最高档单价估算 0.000996 元。第二次 usage / 费用未知，因此整轮估算保持 null；12 元上限下全部 4.7805312 元预留保留，不据此退款或断言免费。
+- 原始结果 `.local/bailian-acceptance/7ccae83893e34f6f98c880936fb175d8/live-report.json` 为 `passed=false / stopped`，公开脱敏证据见 [bailian-live-20261019.json](docs/evidence/bailian-live-20261019.json)。原目录的 claimed / attempt / result 文件永久保留，本计划不能再次执行。
+- 当前执行器统一捕获异常而未记录安全分类，无法从保留证据判断第二次是传输、服务、输出契约还是本地处理失败；不猜测根因、不宣称整体质量通过。下一步先离线补充不泄露原始错误的分类，再复核新一轮在线范围与预算。Stage 9 整体真实验收未完成，Stage 10 未启动。
+
+[PR #4](https://github.com/lho555/procurepilot/pull/4) 继续基于 PR #3，main 不自动合并。下方“待授权 / 尚未实际调用”为授权前历史，不据此重复申请相同凭据权限或重跑原计划。
+
 ## Stage 9 第三切片：百炼适配与一次性验收准备（2026-10-19）
 
 - 分支 `feature/bailian-acceptance`，从公开 main 创建后快进包含 PR #3 的 `69443f0`；不导入私人历史、不自动合并 main。

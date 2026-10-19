@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "kind": "bailian_live_acceptance",
+  "passed": false,
+  "status": "stopped",
+  "model": "qwen3.7-flash",
+  "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "enable_thinking": false,
+  "approved_budget_cny": "12",
+  "reserved_cny": "4.7805312",
+  "reservation_refunded": false,
+  "planned_requests": 4,
+  "request_attempts": 2,
+  "validated_responses": 1,
+  "cost_estimate_upper_cny": null,
+  "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+  "quality_scope": "Four fixed synthetic positive cases only; failure scenarios remain offline; not human-reviewed correctness or production acceptance.",
+  "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+  "source_sha256": "d1f96f053b8e1afa641ea2e5848cb31bff7096540c88f57f2b61793fcaf930fe",
+  "plan_sha256": "e41978a2ba134cdf1513c328d9771f9abfbd3f9671db1c2e8eee4c43d1e79ee4",
+  "observations": [
+    {
+      "case_id": "shortage_and_delay",
+      "http_success": true,
+      "request_elapsed_ms": 2085.068,
+      "usage": {
+        "prompt_tokens": 538,
+        "completion_tokens": 73
+      },
+      "cost_estimate_upper_cny": "0.000996",
+      "selection": {
+        "finding_ids": [
+          "stock:1",
+          "delivery"
+        ],
+        "citation_numbers": [
+          1
+        ],
+        "recommendations": [
+          "HUMAN_REVIEW",
+          "VERIFY_DELIVERY",
+          "COMPARE_SUPPLIERS"
+        ]
+      },
+      "label_checks": {
+        "id": "shortage_and_delay",
+        "passed": true,
+        "checks": {
+          "outcome": true,
+          "request_budget": true,
+          "grounded_facts": true,
+          "citation_applicability": true,
+          "recommendation_coverage": true
+        },
+        "metrics": {
+          "task_success": true,
+          "grounded_facts": true,
+          "citation_applicability": true,
+          "recommendation_coverage": true,
+          "failure_handling": null,
+          "unexpected_acceptance": null
+        },
+        "expected_outcome": "accepted",
+        "actual_outcome": "accepted",
+        "error_type": null,
+        "provider_attempts": 1,
+        "local_validation_ms": 1.005,
+        "selected_citations": [
+          1
+        ],
+        "selected_recommendations": [
+          "HUMAN_REVIEW",
+          "VERIFY_DELIVERY",
+          "COMPARE_SUPPLIERS"
+        ]
+      }
+    }
+  ],
+  "finished_at": "2026-10-19T08:48:48.998639+00:00",
+  "execution_commit": "0ecb97cd02546c56ba4192b0ae4bc978ac549cb9",
+  "report_sha256": "f04e382f233e9ce15170456ac297fb508e0d432a9b49f2f5650e1f66f12a683d",
+  "known_validated_response_cost_estimate_cny": "0.000996",
+  "failure_classification": "not_recorded; transport, provider, output-contract or local processing cause cannot be distinguished from this report",
+  "case_statuses": [
+    {
+      "case_id": "shortage_and_delay",
+      "state": "validated_and_label_checks_passed"
+    },
+    {
+      "case_id": "shortage_only",
+      "state": "attempted_without_validated_observation",
+      "usage": null,
+      "cost_estimate_cny": null
+    },
+    {
+      "case_id": "delay_only",
+      "state": "not_attempted"
+    },
+    {
+      "case_id": "healthy_order",
+      "state": "not_attempted"
+    }
+  ]
+}
