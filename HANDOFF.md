@@ -1,5 +1,16 @@
 # 开发交接
 
+## Stage 9 第二轮：本地凭据前置复核错误，零请求（2026-10-19）
+
+- 用户已明确回复“授权, 继续”，批准第二轮既定四个合成正例及本轮内存认证。审阅提案 SHA256 `1eb0fc60590ac55854d1240af234f778609b06afa6d903fcd7621281219db904` 在 24 小时内，HEAD / 源码 / 请求与旧领取清单一致；原 12 元总上限不变。
+- 分支 `feature/bailian-round-two` 从公开 main 创建后快进到 `91200bd`，依赖 PR #5。仅创建 / 领取计划 `.local/bailian-acceptance/41b392e3a496407fb9653c26f3543936/plan.json`；执行包装脚本的前置复核未统一路径形式，将相对的领取目录与绝对的新计划目录比较，误把新领取列入历史清单，导致断言停止。
+- 这是执行包装脚本错误。`read_credential` 位于失败断言之后，未被执行；没有 attempt 文件，`request_attempts=0`、`validated_responses=0`。原报告 `passed=false / stopped / failure.category=credential / phase=credential` 保持原样；分类表示整个加载器阶段，不能据此断言密钥无效。
+- 原提案目录另存 `execution-authorized.json`、`execution-plan.json` 与补充的 `execution-stopped-diagnosis.json`；只读 `check_budget.py` 归一化路径，不包含凭据读取或计划执行入口，从项目与父目录运行均通过。旧错误复现得到 2 项“历史”领取，正确归一化后排除当前计划，精确匹配审阅的 1 项旧领取。
+- 依本轮预定规则保留新旧全部领取，不重跑、不退款、不创建替代计划。两轮累计本地预留 `9.5610624` 元，未预留 `2.4389376` 元；不等于实际支出。第一轮第二次的根因与真实计费仍未知，新一轮没有模型请求。
+- 公开脱敏证据见 [bailian-round-two-20261019.json](docs/evidence/bailian-round-two-20261019.json)。运行源码仍为 `d158f51e343f37e779fbfa678ac4243486eb2df4470e9de77b87fc10c80ba401`，保持已通过的 228 项后端测试、12 个回放、17 个 Golden Tasks、前端构建、3 项启动检查及 Windows / Ubuntu CI；本提交仅为结果与文档，不重复本地业务验收。
+
+后续先将预算预检 / 路径归一化变成领取前可重复检查，再审阅更小的验收范围或有证据的预算恢复规则。现有未预留额度不足固定四次计划；不自行提高上限、释放预留或追加在线请求。main 不合并，Stage 9 真实验收未完成，Stage 10 未启动。下方为历史，不据此重复执行或申请同一轮权限。
+
 ## Stage 9：安全失败分类离线补充（2026-10-19）
 
 - 分支 `feature/safe-model-diagnostics`，从公开 main 创建后快进到 `1407153`，依赖 PR #4；沿用功能分支推送 / PR 写入授权，不自动合并 main。
