@@ -106,9 +106,90 @@ def claim_inventory(exclude=None):
                 or len(historical["spec"]["requests"]) != claim["maximum_requests"]
                 or historical["spec"]["reserved_cny"] != claim["reserved_cny"]):
             raise ValueError("Historical claim does not match its plan")
-        rows.append({"plan_id": path.parent.name, "claim_sha256": hashlib.sha256(raw).hexdigest(),
-                     "reserved_cny": claim["reserved_cny"]})
+        row = {"plan_id": path.parent.name, "claim_sha256": hashlib.sha256(raw).hexdigest(),
+               "reserved_cny": claim["reserved_cny"]}
+        settlement_path = path.parent / "unused-reservation.json"
+        if os.path.lexists(settlement_path):
+            settlement_raw = bounded_bytes(settlement_path, 20_000)
+            settlement = json.loads(settlement_raw)
+            proof = closed_exposure(path.parent / "plan.json")
+            if (set(settlement) != set(proof) | {"schema_version", "policy", "settled_at"}
+                    or type(settlement["schema_version"]) is not int or settlement["schema_version"] != 1
+                    or settlement["policy"] != "closed_unused_slots_v1"
+                    or digest({key: settlement[key] for key in proof}) != digest(proof)):
+                raise ValueError("Unused reservation settlement no longer matches evidence")
+            settled = datetime.fromisoformat(settlement["settled_at"])
+            if settled.utcoffset() is None or settled > datetime.now(timezone.utc):
+                raise ValueError("Invalid settlement timestamp")
+            row.update(original_reserved_cny=claim["reserved_cny"], reserved_cny=proof["retained_reserved_cny"],
+                       settlement_sha256=hashlib.sha256(settlement_raw).hexdigest())
+        rows.append(row)
     return rows
+
+
+def closed_exposure(path):
+    """Bound every attempted request; unused slots require terminal evidence."""
+    path = (ROOT / path).resolve()
+    if (path.name != "plan.json" or path.parent.parent != acceptance_root()
+            or not re.fullmatch(r"[0-9a-f]{32}", path.parent.name)):
+        raise ValueError("Invalid closed-plan path")
+    plan = json.loads(bounded_bytes(path, 100_000))
+    claim_raw = bounded_bytes(path.parent / "claimed.json", 10_000)
+    report_raw = bounded_bytes(path.parent / "live-report.json", 150_000)
+    claim, report = json.loads(claim_raw), json.loads(report_raw)
+    specification, requests = plan["spec"], plan["spec"]["requests"]
+    maximum, count = claim["maximum_requests"], report["request_attempts"]
+    if (type(maximum) is not int or not 1 <= maximum <= len(CASE_IDS)
+            or type(count) is not int or not 0 <= count < maximum
+            or len(requests) != maximum or specification["maximum_requests"] != maximum
+            or claim["plan_sha256"] != digest(plan) or report["plan_sha256"] != digest(plan)
+            or report["kind"] != "bailian_live_acceptance" or report["status"] != "stopped"
+            or report["passed"] is not False or report["planned_requests"] != maximum
+            or report["reserved_cny"] != claim["reserved_cny"]
+            or specification["reserved_cny"] != str(PER_CALL * maximum)
+            or claim["reserved_cny"] != specification["reserved_cny"]
+            or specification["per_request_reserved_cny"] != str(PER_CALL)
+            or specification["model"] != MODEL or specification["endpoint"] != ENDPOINT
+            or specification["input_token_cap"] != INPUT_CAP or specification["output_token_reserve"] != OUTPUT_CAP
+            or specification["input_cny_per_million"] != str(INPUT_RATE)
+            or specification["output_cny_per_million"] != str(OUTPUT_RATE)
+            or report["source_sha256"] != specification["source_sha256"]
+            or report["case_sha256"] != specification["case_sha256"]):
+        raise ValueError("Closed-plan evidence is inconsistent")
+    ids = [request["case_id"] for request in requests]
+    if len(set(ids)) != maximum or any(case_id not in CASE_IDS for case_id in ids):
+        raise ValueError("Invalid closed-plan case IDs")
+    finished = datetime.fromisoformat(report["finished_at"])
+    if finished.utcoffset() is None or finished > datetime.now(timezone.utc):
+        raise ValueError("Invalid terminal report timestamp")
+    attempts = sorted(path.parent.glob("attempt-*.json"))
+    if {p.name for p in attempts} != {f"attempt-{case_id}.json" for case_id in ids[:count]}:
+        raise ValueError("Attempt markers do not match terminal report")
+    proof_attempts = []
+    for request in requests[:count]:
+        raw = bounded_bytes(path.parent / f"attempt-{request['case_id']}.json", 10_000)
+        if json.loads(raw) != {"case_id": request["case_id"], "body_sha256": request["body_sha256"],
+                               "reserved_cny": str(PER_CALL), "state": "reserved_before_request"}:
+            raise ValueError("Attempt marker does not match the original request")
+        proof_attempts.append({"case_id": request["case_id"], "sha256": hashlib.sha256(raw).hexdigest()})
+    return {"plan_sha256": digest(plan), "claim_sha256": hashlib.sha256(claim_raw).hexdigest(),
+            "report_sha256": hashlib.sha256(report_raw).hexdigest(), "attempts": proof_attempts,
+            "maximum_requests": maximum, "request_attempts": count, "unused_request_slots": maximum - count,
+            "original_reserved_cny": claim["reserved_cny"], "retained_reserved_cny": format(PER_CALL * count, "f")}
+
+
+def settle_unused(path):
+    """Explicit, append-only settlement; claims remain permanently consumed."""
+    with claim_guard():
+        claim_inventory()  # Refuse corrupt history before adding any record.
+        proof = closed_exposure(path)
+        record = (ROOT / path).resolve().parent / "unused-reservation.json"
+        if os.path.lexists(record):
+            raise FileExistsError("Unused slots were already settled")
+        value = {"schema_version": 1, "policy": "closed_unused_slots_v1",
+                 "settled_at": datetime.now(timezone.utc).isoformat(), **proof}
+        write_new(record, value)
+    return value
 
 
 def budget_review(specification):
