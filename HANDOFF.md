@@ -1,5 +1,17 @@
 # 开发交接
 
+## Stage 9：输出契约子码与安全导出（2026-10-20）
+
+- 分支 `feature/output-contract-diagnostics`，从公开 main 创建后快进到 `bdca83a`，基于 PR #9，不自动合并 main。范围为共同模型适配器和正式验收报告的固定诊断字段，未改提示词、模型参数、业务审批或预算规则。
+- 保留 ModelFailureKind.OUTPUT_CONTRACT，新增 OutputContractCode 九个固定枚举；JSON 正文、响应封装、结束状态、消息契约、选择结构、重复选择、事实、引用和建议各有子码。ModelFailure 仅接收本类枚举，报告导出再次检查失败大类 / 请求阶段 / 枚举类型，不输出异常原文或任意属性。
+- 新 failure.contract_code 是可空的加法字段，非模型请求阶段 / 非输出契约 / 未记录或不可信属性均为 null。按检查顺序记录首个失败，正常或非异常质量 / usage 缺口仍为 failure=null；历史报告不修改，不能补推第三轮或首轮第二次根因。
+- 已先用单例复现旧版缺少子码，再完成修复：九类合成响应经真实适配器、正式 CLI 和落盘结果通过，第二例未发、无重试、整轮预留保留、未知费用不记零、密钥 / 原文 / 异常标记不出输出。21 项新增回归加既有相关模块共 173 项通过，原有严格拒绝测试也核对子码。完整交付验证通过：292 项后端测试、12 个离线模型回放、17 个 Golden Tasks、前端类型 / 构建和 3 项 HTTP 启动检查。
+- 本轮仅离线开发与验证，不读现有凭据，不发模型请求，不新增真实计划 / 领取。四个固定请求 body 摘要与原计划一致；前三轮历史记录逐文件一致，三笔累计预留仍为 11.9513280 元，未预留 0.0486720 元，正式只读预检单个新案例仍超预算。回执 `.local/contract-readonly-review.json`。
+
+完整报告 `.local/delivery/d38080b4af954711b0e6d7093c73f494/report.json`，运行源码摘要 `20b3dc6a177b417955c61dd13ff37cdd97f604f38e622d78b5d5ac43aeba73ea`，公开证据 [output-contract-diagnostics-20261020.json](docs/evidence/output-contract-diagnostics-20261020.json)。本提交远端 CI 以对应 PR 检查为准，公开提交继续使用 noreply 身份。无前端改动，不重复浏览器验收。
+
+说明见 [BAILIAN_ACCEPTANCE](docs/BAILIAN_ACCEPTANCE.md#输出契约子码离线验证)。下一步单独审阅共享免费 Token 与现金预算的小批次验收方案，核对共享余量和有效期；本轮不实现该政策或自动释放原领取。Stage 9 整体真实验收未完成，Stage 10 未启动，下方为历史。
+
 ## Stage 9：第三轮两案例验收停止（2026-10-20）
 
 - 分支 `feature/bailian-two-case-results`，从 main 创建后快进到 `cf1bc9b`，基于 PR #8；沿用功能分支推送和 PR 写入授权，不合并 main。本次只更新证据与文档，未修改运行代码、依赖、提示词或审批边界。

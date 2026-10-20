@@ -14,7 +14,7 @@ from uuid import uuid4
 
 from dotenv import dotenv_values
 
-from app.model_explanation import ChatCompletionsAdapter, ModelFailure, ModelFailureKind
+from app.model_explanation import ChatCompletionsAdapter, ModelFailure, ModelFailureKind, OutputContractCode
 from evals.model_replay import ResponseRecord, Suite, evaluate_case
 from scripts.verify_delivery import source_manifest
 
@@ -235,7 +235,7 @@ def read_credential(path, name):
 
 def safe_failure(error, phase, case_id):
     """Closed fields only: never persist exception text, class names or bodies."""
-    category, status = "local_processing", None
+    category, status, contract_code = "local_processing", None, None
     if phase == "credential":
         category = "credential"
     elif phase in {"configure_adapter", "prepare_request", "model_request"}:
@@ -243,10 +243,13 @@ def safe_failure(error, phase, case_id):
             category = "timeout"
         elif isinstance(error, ModelFailure) and type(error.kind) is ModelFailureKind:
             category = error.kind.value
+            if (phase == "model_request" and error.kind is ModelFailureKind.OUTPUT_CONTRACT
+                    and type(error.contract_code) is OutputContractCode):
+                contract_code = error.contract_code.value
             if (phase == "model_request" and error.kind == ModelFailureKind.PROVIDER_HTTP
                     and type(error.http_status) is int and 100 <= error.http_status <= 599):
                 status = error.http_status
-    return {"category": category, "phase": phase, "case_id": case_id, "http_status": status}
+    return {"category": category, "phase": phase, "case_id": case_id, "http_status": status, "contract_code": contract_code}
 
 
 async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):

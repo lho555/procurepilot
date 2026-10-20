@@ -11,7 +11,7 @@ from threading import Barrier, local
 import httpx
 import pytest
 
-from app.model_explanation import ChatCompletionsAdapter, ConfiguredAdapter, ModelFailure, ModelFailureKind
+from app.model_explanation import ChatCompletionsAdapter, ConfiguredAdapter, ModelFailure, ModelFailureKind, OutputContractCode
 from evals import bailian_live as live
 
 
@@ -249,7 +249,8 @@ def test_failure_report_classifies_real_adapter_boundary_without_secret_or_retry
         if event == "truncated": data["choices"][0]["finish_reason"] = "length"
         return httpx.Response(200, json=data)
     report = asyncio.run(live.execute(path, lambda: "fixture-sensitive-key", factory(handler)))
-    assert report["failure"] == {"category": category, "phase": "model_request", "case_id": "shortage_and_delay", "http_status": status}
+    code = {"invalid_json": "response_json", "invalid_facts": "finding_mismatch", "truncated": "completion_state"}.get(event)
+    assert report["failure"] == {"category": category, "phase": "model_request", "case_id": "shortage_and_delay", "http_status": status, "contract_code": code}
     assert report["status"] == "stopped" and not report["passed"]
     assert len(calls) == report["request_attempts"] == 1 and report["validated_responses"] == 0
     assert report["cost_estimate_upper_cny"] is None and report["reserved_cny"] == "4.7805312"
@@ -267,7 +268,7 @@ def test_second_case_failure_preserves_first_observation_and_stops_remaining_cas
         calls.append(request)
         return httpx.Response(200, json=response(live.cases()[0][0])) if len(calls) == 1 else httpx.Response(429, text="fixture-sensitive-body")
     report = asyncio.run(live.execute(path, lambda: "fixture-key", factory(handler)))
-    assert report["failure"] == {"category": "provider_http", "phase": "model_request", "case_id": "shortage_only", "http_status": 429}
+    assert report["failure"] == {"category": "provider_http", "phase": "model_request", "case_id": "shortage_only", "http_status": 429, "contract_code": None}
     assert len(calls) == report["request_attempts"] == 2 and report["validated_responses"] == 1
     assert report["observations"][0]["label_checks"]["passed"]
     assert report["cost_estimate_upper_cny"] is None and not report["reservation_refunded"]
@@ -309,7 +310,7 @@ def test_local_failures_keep_phase_and_never_claim_provider_failure(acceptance, 
             raise ModelFailure("fixture-sensitive-local", kind=ModelFailureKind.PROVIDER_HTTP, http_status=503)
         monkeypatch.setattr(live, "evaluate_case", invalid_local_result)
     report = asyncio.run(live.execute(path, key, build))
-    assert report["failure"] == {"category": category, "phase": phase, "case_id": None if attempts == 0 and phase in {"credential", "configure_adapter"} else "shortage_and_delay", "http_status": None}
+    assert report["failure"] == {"category": category, "phase": phase, "case_id": None if attempts == 0 and phase in {"credential", "configure_adapter"} else "shortage_and_delay", "http_status": None, "contract_code": None}
     assert report["request_attempts"] == attempts and report["validated_responses"] == 0
     assert len(calls) == (0 if phase == "model_request" else attempts)
     assert report["status"] == "stopped" and report["reserved_cny"] == "4.7805312"
@@ -327,6 +328,33 @@ def test_failure_metadata_is_allowlisted_even_when_exception_attributes_are_inva
     assert "fixture-sensitive" not in json.dumps(result)
 
 
+@pytest.mark.parametrize("code", [None, "finding_mismatch", "fixture-sensitive-code", True, {"code": "fixture-sensitive-code"}])
+def test_contract_code_cannot_echo_untrusted_exception_attributes(code):
+    error = ModelFailure("fixture-sensitive-message", contract_code=code)
+    assert error.contract_code is None
+    # The exporter also checks attributes altered after construction.
+    error.contract_code = code
+    result = live.safe_failure(error, "model_request", live.CASE_IDS[0])
+    assert result["category"] == "output_contract" and result["contract_code"] is None
+    assert "fixture-sensitive" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("phase", ["credential", "configure_adapter", "prepare_request", "reserve_request", "validate_result", "persist_result"])
+def test_contract_code_does_not_misattribute_failures_outside_model_request(phase):
+    error = ModelFailure("fixture-sensitive-message", contract_code=OutputContractCode.FINDING_MISMATCH)
+    assert live.safe_failure(error, phase, live.CASE_IDS[0])["contract_code"] is None
+
+
+def test_contract_code_is_absent_for_legacy_errors_and_other_failure_kinds():
+    assert live.safe_failure(ModelFailure("legacy safe error"), "model_request", live.CASE_IDS[0])["contract_code"] is None
+    error = ModelFailure("fixture-sensitive-message", kind=ModelFailureKind.PROVIDER_HTTP,
+                         http_status=429, contract_code=OutputContractCode.RESPONSE_JSON)
+    assert error.contract_code is None
+    error.contract_code = OutputContractCode.RESPONSE_JSON
+    result = live.safe_failure(error, "model_request", live.CASE_IDS[0])
+    assert result["category"] == "provider_http" and result["http_status"] == 429 and result["contract_code"] is None
+
+
 def test_cli_reports_only_safe_failure_fields(acceptance, monkeypatch, capsys):
     path, _ = live.prepare(Decimal("12"))
     execute = live.execute
@@ -339,6 +367,56 @@ def test_cli_reports_only_safe_failure_fields(acceptance, monkeypatch, capsys):
     assert report["failure"]["category"] == "transport"
     assert report["selected_case_ids"] == list(live.CASE_IDS) and report["planned_requests"] == 4
     assert "fixture-sensitive" not in output.out + output.err and not output.err
+
+
+@pytest.mark.parametrize("code", [
+    "response_json", "response_envelope", "completion_state", "message_contract",
+    "selection_schema", "duplicate_selection", "finding_mismatch", "citation_mismatch", "recommendation_mismatch",
+])
+def test_contract_subcode_reaches_cli_and_report_without_raw_output(acceptance, monkeypatch, capsys, code):
+    path, _ = live.prepare(Decimal("12"), ["shortage_only", "healthy_order"])
+    case = live.cases(["shortage_only"])[0][0]
+    calls = []
+    def handler(request):
+        calls.append(request)
+        if code == "response_json":
+            return httpx.Response(200, text="fixture-sensitive-invalid-json")
+        if code == "response_envelope":
+            return httpx.Response(200, json={"choices": "fixture-sensitive-envelope"})
+        data = response(case, debug="fixture-sensitive-response")
+        choice = data["choices"][0]
+        if code == "completion_state": choice["finish_reason"] = "fixture-sensitive-finish"
+        elif code == "message_contract": choice["message"]["tool_calls"] = [{"name": "fixture-sensitive-tool"}]
+        else:
+            selection = json.loads(choice["message"]["content"])
+            if code == "selection_schema": selection["debug"] = "fixture-sensitive-schema"
+            elif code == "duplicate_selection": selection["finding_ids"].append("delivery")
+            elif code == "finding_mismatch": selection["finding_ids"] = ["fixture-sensitive-fact"]
+            elif code == "citation_mismatch": selection["citation_numbers"] = [999]
+            elif code == "recommendation_mismatch": selection["recommendations"] = ["VERIFY"]
+            choice["message"]["content"] = json.dumps(selection)
+        return httpx.Response(200, json=data)
+    def credential(*args):
+        assert (path.parent / "claimed.json").is_file()
+        return "fixture-sensitive-key"
+    execute = live.execute
+    monkeypatch.setattr(live, "read_credential", credential)
+    monkeypatch.setattr(live, "execute", lambda plan, loader: execute(plan, loader, factory(handler)))
+    assert live.main(["--execute", str(path), "--confirm-live", "--credential-file", "fixture-sensitive-file", "--credential-name", "KEY"]) == 1
+    output = capsys.readouterr()
+    summary = json.loads(output.out)
+    report = json.loads((path.parent / "live-report.json").read_text(encoding="utf-8"))
+    assert summary["failure"] == report["failure"] == {
+        "category": "output_contract", "phase": "model_request", "case_id": "shortage_only",
+        "http_status": None, "contract_code": code,
+    }
+    assert summary["request_attempts"] == len(calls) == 1 and summary["validated_responses"] == 0
+    assert report["reserved_cny"] == "2.3902656" and not report["reservation_refunded"]
+    assert report["cost_estimate_upper_cny"] is None and report["observations"] == []
+    assert not (path.parent / "attempt-healthy_order.json").exists()
+    persisted = "".join(p.read_text(encoding="utf-8") for p in path.parent.glob("*.json"))
+    assert "fixture-sensitive" not in persisted + output.out + output.err
+    assert not output.err
 
 
 def file_snapshot(root):

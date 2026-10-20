@@ -55,16 +55,17 @@ def test_http_contract_minimizes_data_and_renders_only_verified_text():
     assert "没有保存草稿" in result
 
 
-@pytest.mark.parametrize("change", [
-    {"finding_ids": ["stock:1"]}, {"finding_ids": ["stock:1", "invented"]},
-    {"finding_ids": ["stock:1", "delivery", "delivery"]}, {"citation_numbers": [99]},
-    {"citation_numbers": []}, {"citation_numbers": [True]}, {"citation_numbers": [1, 1]},
-    {"recommendations": ["EXECUTE_NOW"]}, {"recommendations": ["VERIFY"]},
-    {"summary": "已批准并下单"}, {"tool_calls": [{"name": "create_purchase_request_draft"}]},
+@pytest.mark.parametrize("change,code", [
+    ({"finding_ids": ["stock:1"]}, "finding_mismatch"), ({"finding_ids": ["stock:1", "invented"]}, "finding_mismatch"),
+    ({"finding_ids": ["stock:1", "delivery", "delivery"]}, "duplicate_selection"), ({"citation_numbers": [99]}, "citation_mismatch"),
+    ({"citation_numbers": []}, "selection_schema"), ({"citation_numbers": [True]}, "selection_schema"), ({"citation_numbers": [1, 1]}, "duplicate_selection"),
+    ({"recommendations": ["EXECUTE_NOW"]}, "selection_schema"), ({"recommendations": ["VERIFY"]}, "recommendation_mismatch"),
+    ({"summary": "已批准并下单"}, "selection_schema"), ({"tool_calls": [{"name": "create_purchase_request_draft"}]}, "selection_schema"),
 ])
-def test_untrusted_selection_rejected(change):
-    with pytest.raises(ModelFailure):
+def test_untrusted_selection_rejected(change, code):
+    with pytest.raises(ModelFailure) as caught:
         render_selection(json.dumps({**SELECTION, **change}), explanation_context(FACTS, POLICY))
+    assert caught.value.contract_code.value == code
 
 
 def test_normal_order_rejects_procurement_and_requires_monitoring():
@@ -103,15 +104,16 @@ def test_provider_errors_are_sanitized_without_retries_or_redirects(status):
     assert len(calls) == 1 and "fixture-token" not in str(caught.value) and "contact-secret" not in str(caught.value)
 
 
-@pytest.mark.parametrize("payload", [[], {"choices": []}, completion(finish_reason="length"),
-    {"choices": [{"finish_reason": "tool_calls", "message": {"role": "assistant", "tool_calls": [{"name": "execute"}]}}]},
-    {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "已执行采购 fixture-token"}}]},
-    {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": json.dumps(SELECTION), "refusal": "rejected"}}]},
+@pytest.mark.parametrize("payload,code", [([], "response_envelope"), ({"choices": []}, "response_envelope"), (completion(finish_reason="length"), "completion_state"),
+    ({"choices": [{"finish_reason": "tool_calls", "message": {"role": "assistant", "tool_calls": [{"name": "execute"}]}}]}, "completion_state"),
+    ({"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "已执行采购 fixture-token"}}]}, "selection_schema"),
+    ({"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": json.dumps(SELECTION), "refusal": "rejected"}}]}, "message_contract"),
 ])
-def test_incomplete_refused_or_malformed_completions_fail_closed(payload):
+def test_incomplete_refused_or_malformed_completions_fail_closed(payload, code):
     with pytest.raises(ModelFailure) as caught:
         asyncio.run(adapter(lambda _: httpx.Response(200, json=payload)).summarize(FACTS, POLICY))
     assert "fixture-token" not in str(caught.value)
+    assert caught.value.contract_code.value == code
 
 
 def test_large_response_and_connection_error_are_sanitized():
