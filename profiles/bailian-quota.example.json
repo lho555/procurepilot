@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "provider": "bailian",
+  "model": "qwen3.7-flash",
+  "shared": true,
+  "observed_at": null,
+  "expires_at": null,
+  "remaining_tokens": null,
+  "project_token_limit": 0,
+  "free_quota_only": null
+}

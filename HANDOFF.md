@@ -1,5 +1,18 @@
 # 开发交接
 
+## Stage 9：共享 Token 与现金兜底的离线审阅（2026-10-20）
+
+- 分支 `feature/model-budget-review`，从公开 main 创建后快进到 `c7badad`，基于 PR #10，不自动合并 main。本次新增只读审阅器、入口脚本、匿名快照模板和测试，原正式验收器 / 模型适配器 / 领取逻辑均未改。
+- `scripts/review_bailian_budget.py --snapshot <项目内 JSON> --case <固定案例>` 仅输出报告。严格字段 / 类型 / 模型 / 字节上限 / 时区验证，拒绝重复字段与外部路径；额外字段和未知 CLI 参数也不回显。快照 15 分钟有效期是项目审阅策略，不是供应商保证。
+- 将所选案例的保守输入＋输出 Token、人工报告的共享余额和本项目限额，与所有历史领取叠加后的完整现金兜底分开。用完即停 true / false / null 均只作人工报告，不认证供应商状态、不当作零费用保证；passed 不是执行许可，没有新执行路线或授权扩大。
+- 34 项新增测试覆盖只读 / 无密钥 / 无模型、数量边界、未知 / 过期 / 未来 / 不足快照、严格输入与敏感错误、15 分钟边界、三种用完即停状态不减现金、历史预留仍阻塞、损坏历史 / 外来互斥保留、跨 cwd 及 CLI 0 / 1 / 2 / 帮助和禁止执行参数。与既有验收器共 147 项通过。完整交付验证通过：326 项后端测试、12 个离线模型回放、17 个 Golden Tasks、前端类型 / 构建和 3 项 HTTP 启动检查。
+- 实际匿名信息未给出控制台准确观测时间 / 到期时点或本项目分配，因此快照对应值保持 null / 0；不将“约三天”伪装成准确时间。实际只读报告从项目与父目录一致（reviewed_at 除外），列出 observation_time_unknown / expiry_unknown / project_token_limit_exceeded / cash_budget_exceeded。回执 `.local/budget-review/4109f4665f4b4228bf0186345bdcae9d/review.json`。
+- 三轮实际历史逐文件不变，累计预留仍 11.9513280 元、未预留 0.0486720 元。本轮没有新真实计划 / 领取、现有凭据读取或模型请求，也未访问控制台 / 改供应商设置。每例 992842 Token 与 1.1951328 元完整现金兜底沿用已有保守模型上限，不代表实际用量 / 费用。
+
+完整报告 `.local/delivery/77da077b1bc2421caa3180aeb0fd85ef/report.json`，运行源码摘要 `622cebd391420327a30437e720a6f7a8a048c0d791d486fda7acaddfe0b375fb`；公开证据 [model-budget-review-20261020.json](docs/evidence/model-budget-review-20261020.json)。对应提交远端 CI 以 PR 检查为准。没有前端改动，不重复浏览器验收；公开提交继续使用 noreply 邮箱。
+
+说明见 [BAILIAN_ACCEPTANCE](docs/BAILIAN_ACCEPTANCE.md#离线-token-与现金双预算审阅)。下一步独立审阅可核实的免费用完即停执行方案或可验证的更小输入上限方案；本切片未实现零现金回退或 Token 执行分配，不释放旧领取或增加原上限。Stage 9 整体真实验收未完成，Stage 10 未启动，下方为历史。
+
 ## Stage 9：输出契约子码与安全导出（2026-10-20）
 
 - 分支 `feature/output-contract-diagnostics`，从公开 main 创建后快进到 `bdca83a`，基于 PR #9，不自动合并 main。范围为共同模型适配器和正式验收报告的固定诊断字段，未改提示词、模型参数、业务审批或预算规则。
