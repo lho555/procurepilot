@@ -1,0 +1,753 @@
+{
+  "schema_version": 1,
+  "kind": "bounded_live_validation_session",
+  "api_reachable": true,
+  "completed_within_session_limit": true,
+  "generation_attempts_this_session": 7,
+  "validated_responses_this_session": 6,
+  "maximum_new_attempts": 7,
+  "latest_targeted_repair_passed": true,
+  "latest_version_full_four_case_result": null,
+  "four_case_run_summary": {
+    "source_sha256": "ec840a04d49472ce1326c98bc14caa2c946d705c0ea9880db4f4abe8818155cb",
+    "contract_valid_responses": 4,
+    "quality_passed_cases": 3,
+    "total_cases": 4,
+    "failed_quality_case": "shortage_only",
+    "failed_quality_check": "citation_applicability"
+  },
+  "fixes": [
+    "Bind each request prompt schema to all input fact IDs, existing citation numbers and allowed recommendations; retain zero-shortage/no-delay facts.",
+    "Ask for directly applicable procurement policy clauses and exclude irrelevant or explicitly inapplicable material."
+  ],
+  "latest_scope": "Latest prompt passed shortage_only targeted verification. Other three quality passes belong to the preceding prompt. No latest-version four-case pass is claimed.",
+  "budget": {
+    "cash_cap_cny": "12",
+    "original_record_reservations_cny": "22.7075232",
+    "effective_reserved_cny": "11.9513280",
+    "unreserved_cny": "0.0486720",
+    "known_usage_cost_upper_estimate_cny": "0.0062436",
+    "whole_session_actual_cost_cny": null,
+    "unknown_usage_attempts": 1
+  },
+  "cost_scope": "Six observed usages priced at documented highest rates; one failed attempt has unknown usage. Estimate is not an invoice or total actual spending. All attempted calls retain full maximum cost reservations.",
+  "runs": [
+    {
+      "run": 1,
+      "execution_commit": "3fab328b6e39dc12a895d5d818606201b9680d9e",
+      "request_fingerprints": [
+        {
+          "case_id": "shortage_and_delay",
+          "body_sha256": "e998b008cab056f73c8e03622a5af21f64ca7bd89ce824c1e7d48a04253e3214"
+        },
+        {
+          "case_id": "shortage_only",
+          "body_sha256": "416b738e2a4bd980c3d5c1c14a69e0c428ae01d4bcf17bfcf77ca7c641389296"
+        },
+        {
+          "case_id": "delay_only",
+          "body_sha256": "141d68bf27bac56c2084632d2aacb4173f3e8f2a9aea0c65ede25e71cba86aff"
+        },
+        {
+          "case_id": "healthy_order",
+          "body_sha256": "c9bda0cdd1eeb34213adadef521746078b6fc9ff3b2921e2c8eb5dbdd00a041e"
+        }
+      ],
+      "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+      "report_sha256": "cf262d06b49c67e4070b30ba616dfccbd5e15730d826aac00146119e71a49324",
+      "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+      "report": {
+        "schema_version": 1,
+        "kind": "bailian_live_acceptance",
+        "passed": false,
+        "status": "stopped",
+        "failure": {
+          "category": "output_contract",
+          "phase": "model_request",
+          "case_id": "shortage_only",
+          "http_status": null,
+          "contract_code": "finding_mismatch"
+        },
+        "budget_review": {
+          "prior_claims": [
+            {
+              "plan_id": "41b392e3a496407fb9653c26f3543936",
+              "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+              "reserved_cny": "0.0000000",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "920b52ffd443d9d65cd77f93e7e03bfd1693fe4eaaec7166d0346f9ffb7b16b8"
+            },
+            {
+              "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+              "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+              "reserved_cny": "2.3902656",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2"
+            },
+            {
+              "plan_id": "acc1ba56e1f14a089bade5e0283e1ea1",
+              "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+              "reserved_cny": "1.1951328",
+              "original_reserved_cny": "2.3902656",
+              "settlement_sha256": "4e6d2000bcf75ce3ec4c6284c8124a9ccb28168e2affe6c0060ba2291df22b58"
+            }
+          ],
+          "prior_reserved_cny": "3.5853984",
+          "proposed_reserved_cny": "4.7805312",
+          "aggregate_reserved_cny": "8.3659296",
+          "total_cap_cny": "12",
+          "unreserved_before_claim_cny": "8.4146016",
+          "can_claim": true
+        },
+        "model": "qwen3.7-flash",
+        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "enable_thinking": false,
+        "approved_budget_cny": "12",
+        "reserved_cny": "4.7805312",
+        "reservation_refunded": false,
+        "planned_requests": 4,
+        "request_attempts": 2,
+        "selected_case_ids": [
+          "shortage_and_delay",
+          "shortage_only",
+          "delay_only",
+          "healthy_order"
+        ],
+        "validated_responses": 1,
+        "cost_estimate_upper_cny": null,
+        "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+        "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
+        "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+        "source_sha256": "9f902e5d213fd93d6956cfbb0898847bc4367cb779a2c8ec5aa9fe406da5f27e",
+        "plan_sha256": "8918a5468fd14dcad997e9c63cecd72fdae557c1d9299bfc3e3bfd6cf963d469",
+        "observations": [
+          {
+            "case_id": "shortage_and_delay",
+            "http_success": true,
+            "request_elapsed_ms": 1686.702,
+            "usage": {
+              "prompt_tokens": 538,
+              "completion_tokens": 73
+            },
+            "cost_estimate_upper_cny": "0.000996",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1
+              ],
+              "recommendations": [
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY",
+                "COMPARE_SUPPLIERS"
+              ]
+            },
+            "label_checks": {
+              "id": "shortage_and_delay",
+              "passed": true,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 1.1,
+              "selected_citations": [
+                1
+              ],
+              "selected_recommendations": [
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY",
+                "COMPARE_SUPPLIERS"
+              ]
+            }
+          }
+        ],
+        "finished_at": "2026-10-20T11:12:56.449996+00:00"
+      }
+    },
+    {
+      "run": 2,
+      "execution_commit": "44aae79a59fd3319cdb3c78a593b0ca0b0119dd2",
+      "request_fingerprints": [
+        {
+          "case_id": "shortage_and_delay",
+          "body_sha256": "1db037a64ca9c40a3457f0a61d8dd9c315404b025ae38235c260e17ee92006b3"
+        },
+        {
+          "case_id": "shortage_only",
+          "body_sha256": "6d4a3517945140d4116d39d80c99a617859b13255032b63b194bea7bc95896f4"
+        },
+        {
+          "case_id": "delay_only",
+          "body_sha256": "f7e8ea9f40d7844f63ededd703954ad283939cda98ead6570ad110b28e1c6533"
+        },
+        {
+          "case_id": "healthy_order",
+          "body_sha256": "7f42607d1fb2e519e487aeeb2691882c19d9b15faebb8ee8ee99536c5ce9c1e8"
+        }
+      ],
+      "plan_id": "8ceee086892e4a15addaf94de0143093",
+      "report_sha256": "6de5b551a18750b2d411006bf3d1ac2f3df430b26d520485e0b56f3c38231840",
+      "claim_sha256": "610165f4904dad64c9c152093e2a5b03348cf0601ab267fd285823a620670356",
+      "report": {
+        "schema_version": 1,
+        "kind": "bailian_live_acceptance",
+        "passed": false,
+        "status": "completed_with_quality_or_usage_gaps",
+        "failure": null,
+        "budget_review": {
+          "prior_claims": [
+            {
+              "plan_id": "41b392e3a496407fb9653c26f3543936",
+              "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+              "reserved_cny": "0.0000000",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "920b52ffd443d9d65cd77f93e7e03bfd1693fe4eaaec7166d0346f9ffb7b16b8"
+            },
+            {
+              "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+              "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+              "reserved_cny": "2.3902656",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2"
+            },
+            {
+              "plan_id": "acc1ba56e1f14a089bade5e0283e1ea1",
+              "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+              "reserved_cny": "1.1951328",
+              "original_reserved_cny": "2.3902656",
+              "settlement_sha256": "4e6d2000bcf75ce3ec4c6284c8124a9ccb28168e2affe6c0060ba2291df22b58"
+            },
+            {
+              "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+              "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+              "reserved_cny": "2.3902656",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "634cf0052c007fda7c2ae69f64c42d1cd37d968c28bb0f151d28eda718857f7f"
+            }
+          ],
+          "prior_reserved_cny": "5.9756640",
+          "proposed_reserved_cny": "4.7805312",
+          "aggregate_reserved_cny": "10.7561952",
+          "total_cap_cny": "12",
+          "unreserved_before_claim_cny": "6.0243360",
+          "can_claim": true
+        },
+        "model": "qwen3.7-flash",
+        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "enable_thinking": false,
+        "approved_budget_cny": "12",
+        "reserved_cny": "4.7805312",
+        "reservation_refunded": false,
+        "planned_requests": 4,
+        "request_attempts": 4,
+        "selected_case_ids": [
+          "shortage_and_delay",
+          "shortage_only",
+          "delay_only",
+          "healthy_order"
+        ],
+        "validated_responses": 4,
+        "cost_estimate_upper_cny": "0.0041196",
+        "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+        "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
+        "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+        "source_sha256": "ec840a04d49472ce1326c98bc14caa2c946d705c0ea9880db4f4abe8818155cb",
+        "plan_sha256": "1b8fcb680b297dcb70e0dda67923856dedcdc4ec8bf31af4521339ed44328931",
+        "observations": [
+          {
+            "case_id": "shortage_and_delay",
+            "http_success": true,
+            "request_elapsed_ms": 1687.082,
+            "usage": {
+              "prompt_tokens": 612,
+              "completion_tokens": 73
+            },
+            "cost_estimate_upper_cny": "0.0010848",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1
+              ],
+              "recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY"
+              ]
+            },
+            "label_checks": {
+              "id": "shortage_and_delay",
+              "passed": true,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 1.036,
+              "selected_citations": [
+                1
+              ],
+              "selected_recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY"
+              ]
+            }
+          },
+          {
+            "case_id": "shortage_only",
+            "http_success": true,
+            "request_elapsed_ms": 1752.51,
+            "usage": {
+              "prompt_tokens": 585,
+              "completion_tokens": 85
+            },
+            "cost_estimate_upper_cny": "0.00111",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1,
+                2
+              ],
+              "recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "PREPARE_DRAFT",
+                "VERIFY"
+              ]
+            },
+            "label_checks": {
+              "id": "shortage_only",
+              "passed": false,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": false,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": false,
+                "grounded_facts": true,
+                "citation_applicability": false,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 1.02,
+              "selected_citations": [
+                1,
+                2
+              ],
+              "selected_recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "PREPARE_DRAFT",
+                "VERIFY"
+              ]
+            }
+          },
+          {
+            "case_id": "delay_only",
+            "http_success": true,
+            "request_elapsed_ms": 1467.26,
+            "usage": {
+              "prompt_tokens": 578,
+              "completion_tokens": 64
+            },
+            "cost_estimate_upper_cny": "0.0010008",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1
+              ],
+              "recommendations": [
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY"
+              ]
+            },
+            "label_checks": {
+              "id": "delay_only",
+              "passed": true,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 0.988,
+              "selected_citations": [
+                1
+              ],
+              "selected_recommendations": [
+                "HUMAN_REVIEW",
+                "VERIFY_DELIVERY"
+              ]
+            }
+          },
+          {
+            "case_id": "healthy_order",
+            "http_success": true,
+            "request_elapsed_ms": 1295.562,
+            "usage": {
+              "prompt_tokens": 550,
+              "completion_tokens": 55
+            },
+            "cost_estimate_upper_cny": "0.000924",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1
+              ],
+              "recommendations": [
+                "MONITOR"
+              ]
+            },
+            "label_checks": {
+              "id": "healthy_order",
+              "passed": true,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 0.817,
+              "selected_citations": [
+                1
+              ],
+              "selected_recommendations": [
+                "MONITOR"
+              ]
+            }
+          }
+        ],
+        "finished_at": "2026-10-20T11:16:42.657310+00:00"
+      }
+    },
+    {
+      "run": 3,
+      "execution_commit": "9c89a3d8014372c26d98086c6971a5f765c06d0f",
+      "request_fingerprints": [
+        {
+          "case_id": "shortage_only",
+          "body_sha256": "c7e6955ef06093cd74a81174753aeab569bca0e1fa3035e6f9852ccac5e119c2"
+        }
+      ],
+      "plan_id": "b07ccaa37d3544b4ad81fe311c2e571a",
+      "report_sha256": "b736179400f11bb5f3ab020d5f7bd352080feb0fb0ea4189fe21a7bab96e51da",
+      "claim_sha256": "5373f1d08b5e660d1efb3d70abab8767797c5a815b199dc081761d7e7a497945",
+      "report": {
+        "schema_version": 1,
+        "kind": "bailian_live_acceptance",
+        "passed": true,
+        "status": "completed",
+        "failure": null,
+        "budget_review": {
+          "prior_claims": [
+            {
+              "plan_id": "41b392e3a496407fb9653c26f3543936",
+              "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+              "reserved_cny": "0.0000000",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "920b52ffd443d9d65cd77f93e7e03bfd1693fe4eaaec7166d0346f9ffb7b16b8"
+            },
+            {
+              "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+              "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+              "reserved_cny": "2.3902656",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2"
+            },
+            {
+              "plan_id": "8ceee086892e4a15addaf94de0143093",
+              "claim_sha256": "610165f4904dad64c9c152093e2a5b03348cf0601ab267fd285823a620670356",
+              "reserved_cny": "4.7805312"
+            },
+            {
+              "plan_id": "acc1ba56e1f14a089bade5e0283e1ea1",
+              "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+              "reserved_cny": "1.1951328",
+              "original_reserved_cny": "2.3902656",
+              "settlement_sha256": "4e6d2000bcf75ce3ec4c6284c8124a9ccb28168e2affe6c0060ba2291df22b58"
+            },
+            {
+              "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+              "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+              "reserved_cny": "2.3902656",
+              "original_reserved_cny": "4.7805312",
+              "settlement_sha256": "634cf0052c007fda7c2ae69f64c42d1cd37d968c28bb0f151d28eda718857f7f"
+            }
+          ],
+          "prior_reserved_cny": "10.7561952",
+          "proposed_reserved_cny": "1.1951328",
+          "aggregate_reserved_cny": "11.9513280",
+          "total_cap_cny": "12",
+          "unreserved_before_claim_cny": "1.2438048",
+          "can_claim": true
+        },
+        "model": "qwen3.7-flash",
+        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "enable_thinking": false,
+        "approved_budget_cny": "12",
+        "reserved_cny": "1.1951328",
+        "reservation_refunded": false,
+        "planned_requests": 1,
+        "request_attempts": 1,
+        "selected_case_ids": [
+          "shortage_only"
+        ],
+        "validated_responses": 1,
+        "cost_estimate_upper_cny": "0.001128",
+        "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+        "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
+        "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+        "source_sha256": "cf3067267584762e34c822a4312fcd8ccddc0e59540d837ed03a2db3c3df6026",
+        "plan_sha256": "40b999845aa16e592098a4f3fc5129ed9910d9454e15afbe3f682ff2cb134b9a",
+        "observations": [
+          {
+            "case_id": "shortage_only",
+            "http_success": true,
+            "request_elapsed_ms": 2287.118,
+            "usage": {
+              "prompt_tokens": 620,
+              "completion_tokens": 80
+            },
+            "cost_estimate_upper_cny": "0.001128",
+            "selection": {
+              "finding_ids": [
+                "stock:1",
+                "delivery"
+              ],
+              "citation_numbers": [
+                1
+              ],
+              "recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "PREPARE_DRAFT",
+                "VERIFY"
+              ]
+            },
+            "label_checks": {
+              "id": "shortage_only",
+              "passed": true,
+              "checks": {
+                "outcome": true,
+                "request_budget": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true
+              },
+              "metrics": {
+                "task_success": true,
+                "grounded_facts": true,
+                "citation_applicability": true,
+                "recommendation_coverage": true,
+                "failure_handling": null,
+                "unexpected_acceptance": null
+              },
+              "expected_outcome": "accepted",
+              "actual_outcome": "accepted",
+              "error_type": null,
+              "provider_attempts": 1,
+              "local_validation_ms": 1.067,
+              "selected_citations": [
+                1
+              ],
+              "selected_recommendations": [
+                "COMPARE_SUPPLIERS",
+                "HUMAN_REVIEW",
+                "PREPARE_DRAFT",
+                "VERIFY"
+              ]
+            }
+          }
+        ],
+        "finished_at": "2026-10-20T11:19:45.947129+00:00"
+      }
+    }
+  ],
+  "unused_slot_settlements": [
+    {
+      "plan_id": "41b392e3a496407fb9653c26f3543936",
+      "sha256": "920b52ffd443d9d65cd77f93e7e03bfd1693fe4eaaec7166d0346f9ffb7b16b8",
+      "record": {
+        "schema_version": 1,
+        "policy": "closed_unused_slots_v1",
+        "settled_at": "2026-10-20T11:12:42.214507+00:00",
+        "plan_sha256": "1c8c1bc8ae2f64c4b66418c8a4dddfe6fcb854c577ba2bdec5c0e85165826aca",
+        "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+        "report_sha256": "6c3cbdd0a9f8e2287d58b48990fcce0c78d0f36a73438df6c8d446b2b4415fe2",
+        "attempts": [],
+        "maximum_requests": 4,
+        "request_attempts": 0,
+        "unused_request_slots": 4,
+        "original_reserved_cny": "4.7805312",
+        "retained_reserved_cny": "0.0000000"
+      }
+    },
+    {
+      "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+      "sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2",
+      "record": {
+        "schema_version": 1,
+        "policy": "closed_unused_slots_v1",
+        "settled_at": "2026-10-20T11:12:42.783280+00:00",
+        "plan_sha256": "e41978a2ba134cdf1513c328d9771f9abfbd3f9671db1c2e8eee4c43d1e79ee4",
+        "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+        "report_sha256": "f04e382f233e9ce15170456ac297fb508e0d432a9b49f2f5650e1f66f12a683d",
+        "attempts": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "1816f48b79d28097720a4babaf2fc1209a9a5f3634d718cc7f689d15ced1f29b"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "1532ac50ae0ab5cbc95b0a6254167d7db2028da6533cc4926b1b385bc885537d"
+          }
+        ],
+        "maximum_requests": 4,
+        "request_attempts": 2,
+        "unused_request_slots": 2,
+        "original_reserved_cny": "4.7805312",
+        "retained_reserved_cny": "2.3902656"
+      }
+    },
+    {
+      "plan_id": "acc1ba56e1f14a089bade5e0283e1ea1",
+      "sha256": "4e6d2000bcf75ce3ec4c6284c8124a9ccb28168e2affe6c0060ba2291df22b58",
+      "record": {
+        "schema_version": 1,
+        "policy": "closed_unused_slots_v1",
+        "settled_at": "2026-10-20T11:12:43.361058+00:00",
+        "plan_sha256": "47ef0274c78870c16cdf24f109836fd5724361811c9daa685a28d6bcfdc4a610",
+        "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+        "report_sha256": "2c349207c9ee857b2968e617c4675b07050191beda18241112a19bccb42ca2c1",
+        "attempts": [
+          {
+            "case_id": "shortage_only",
+            "sha256": "1532ac50ae0ab5cbc95b0a6254167d7db2028da6533cc4926b1b385bc885537d"
+          }
+        ],
+        "maximum_requests": 2,
+        "request_attempts": 1,
+        "unused_request_slots": 1,
+        "original_reserved_cny": "2.3902656",
+        "retained_reserved_cny": "1.1951328"
+      }
+    },
+    {
+      "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+      "sha256": "634cf0052c007fda7c2ae69f64c42d1cd37d968c28bb0f151d28eda718857f7f",
+      "record": {
+        "schema_version": 1,
+        "policy": "closed_unused_slots_v1",
+        "settled_at": "2026-10-20T11:16:26.866051+00:00",
+        "plan_sha256": "8918a5468fd14dcad997e9c63cecd72fdae557c1d9299bfc3e3bfd6cf963d469",
+        "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+        "report_sha256": "cf262d06b49c67e4070b30ba616dfccbd5e15730d826aac00146119e71a49324",
+        "attempts": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "1816f48b79d28097720a4babaf2fc1209a9a5f3634d718cc7f689d15ced1f29b"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "1532ac50ae0ab5cbc95b0a6254167d7db2028da6533cc4926b1b385bc885537d"
+          }
+        ],
+        "maximum_requests": 4,
+        "request_attempts": 2,
+        "unused_request_slots": 2,
+        "original_reserved_cny": "4.7805312",
+        "retained_reserved_cny": "2.3902656"
+      }
+    }
+  ],
+  "privacy": {
+    "synthetic_inputs_only": true,
+    "credential_used_in_memory_only": true,
+    "source_configuration_unchanged": true,
+    "raw_model_responses_errors_or_authentication_headers_persisted": false,
+    "original_historical_files_unchanged": true
+  },
+  "limitations": [
+    "Four fixed synthetic positive cases are not production or general model-quality certification.",
+    "Failure scenarios remain offline; the latest prompt has one live targeted case.",
+    "Historical unclassified failures are not reconstructed or rewritten.",
+    "Original claimed plans remain permanently consumed; only unused slots were explicitly settled."
+  ]
+}
