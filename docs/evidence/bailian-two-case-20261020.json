@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "bailian_live_acceptance",
+  "passed": false,
+  "status": "stopped",
+  "failure": {
+    "category": "output_contract",
+    "phase": "model_request",
+    "case_id": "shortage_only",
+    "http_status": null
+  },
+  "budget_review": {
+    "prior_claims": [
+      {
+        "plan_id": "41b392e3a496407fb9653c26f3543936",
+        "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+        "reserved_cny": "4.7805312"
+      },
+      {
+        "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+        "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+        "reserved_cny": "4.7805312"
+      }
+    ],
+    "prior_reserved_cny": "9.5610624",
+    "proposed_reserved_cny": "2.3902656",
+    "aggregate_reserved_cny": "11.9513280",
+    "total_cap_cny": "12",
+    "unreserved_before_claim_cny": "2.4389376",
+    "can_claim": true
+  },
+  "model": "qwen3.7-flash",
+  "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "enable_thinking": false,
+  "approved_budget_cny": "12",
+  "reserved_cny": "2.3902656",
+  "reservation_refunded": false,
+  "planned_requests": 2,
+  "request_attempts": 1,
+  "selected_case_ids": [
+    "shortage_only",
+    "healthy_order"
+  ],
+  "validated_responses": 0,
+  "cost_estimate_upper_cny": null,
+  "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+  "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
+  "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+  "source_sha256": "8e4a4135c2c4bd015321128c0f683a9a46312495cda33e33d6500214fe9ffead",
+  "plan_sha256": "47ef0274c78870c16cdf24f109836fd5724361811c9daa685a28d6bcfdc4a610",
+  "observations": [],
+  "finished_at": "2026-10-20T00:46:01.224485+00:00",
+  "round": 3,
+  "execution_commit": "cf1bc9b2fb8891c48e3ed88c27e556285cb2a0ca",
+  "report_sha256": "2c349207c9ee857b2968e617c4675b07050191beda18241112a19bccb42ca2c1",
+  "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+  "review_proposal_sha256": "4d82337f66851ed6462175e11b75ed476736412a09b3b0478d1d37c1389ac7b5",
+  "credential_read_reached": true,
+  "new_request_attempts": 1,
+  "case_statuses": [
+    {
+      "case_id": "shortage_only",
+      "state": "attempted_output_contract_rejected"
+    },
+    {
+      "case_id": "healthy_order",
+      "state": "not_attempted_after_failure"
+    }
+  ],
+  "diagnostic_scope": {
+    "confirmed": "The formal executor claimed the reviewed two-case plan, loaded the designated credential, attempted the first case and stopped on output_contract before returning a verified selection.",
+    "not_recorded": "Specific output-contract subtype, raw model response, exception text and trusted usage for this failed request were not retained.",
+    "limits": "Cannot distinguish malformed envelope/content, incomplete finish, schema, facts, citations or recommendation checks. Does not diagnose the first-round failure.",
+    "next_step": "Offline refinement of fixed, non-sensitive contract failure codes; no automatic online retry, budget release or relaxed validation."
+  },
+  "budget_reconciliation": {
+    "total_cap_cny": "12",
+    "prior_reserved_cny": "9.5610624",
+    "third_round_reserved_cny": "2.3902656",
+    "aggregate_reserved_cny": "11.9513280",
+    "unreserved_cny": "0.0486720",
+    "all_three_claims_retained": true,
+    "whole_project_actual_cost_cny": null,
+    "next_single_case_can_claim": false,
+    "next_single_case_preflight_reason": "budget_exceeded",
+    "scope": "Conservative local reservations, not provider spending. Unknown first/third-round usage is not treated as free."
+  }
+}
