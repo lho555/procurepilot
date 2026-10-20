@@ -4,6 +4,7 @@ import json
 
 from fastapi.testclient import TestClient
 import httpx
+from jsonschema import Draft202012Validator
 import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -53,6 +54,28 @@ def test_http_contract_minimizes_data_and_renders_only_verified_text():
     assert "参考缺口 78" in result and "晚 2 天" in result
     assert "[1] " + POLICY["citations"][0]["excerpt"] in result
     assert "没有保存草稿" in result
+
+
+@pytest.mark.parametrize("shortage,delay", [(78, 2), (78, 0), (0, 2), (0, 0)])
+def test_prompt_schema_covers_all_facts_even_when_no_exception_exists(shortage, delay):
+    facts = copy.deepcopy(FACTS)
+    facts["shortages"][0].update(available=100 - shortage, shortage=shortage)
+    facts.update(delay_days=delay, needs_review=bool(shortage or delay))
+    context = explanation_context(facts, POLICY)
+    body = adapter(lambda _: pytest.fail("No network while checking prompt")).request_body(facts, POLICY)
+    schema = json.loads(body["messages"][0]["content"].split("只返回符合以下结构的 JSON：", 1)[1])
+    validator = Draft202012Validator(schema)
+    required = context["required_recommendation"]
+    complete = {"finding_ids": list(context["findings"]), "citation_numbers": [1], "recommendations": [required]}
+    assert validator.is_valid(complete)
+    assert not validator.is_valid({**complete, "finding_ids": ["stock:1"]})
+    assert not validator.is_valid({**complete, "finding_ids": ["stock:1", "invented"]})
+    assert not validator.is_valid({**complete, "finding_ids": ["stock:1", "stock:1"]})
+    assert not validator.is_valid({**complete, "citation_numbers": [999]})
+    assert not validator.is_valid({**complete, "recommendations": ["VERIFY"]})
+    assert validator.is_valid({**complete, "finding_ids": list(reversed(complete["finding_ids"]))})
+    # Per-request restrictions must not mutate the shared general contract.
+    assert "enum" not in model_explanation.Selection.model_json_schema()["properties"]["finding_ids"]["items"]
 
 
 @pytest.mark.parametrize("change,code", [
