@@ -102,14 +102,15 @@ HTTPX 直接请求不需要 `extra_body`。保留 JSON 输出与全部事实 / �
 
 ## 安全失败分类（离线验证）
 
-后续执行若因异常停止，报告与 CLI 摘要增加 `failure` 对象，只允许固定类别、固定阶段、合成案例编号和有界 HTTP 状态码。例如，以下为本地响应替身模拟的限流失败，不是真实服务结果：
+后续执行若因异常停止，报告与 CLI 摘要增加 `failure` 对象，只允许固定类别、固定阶段、合成案例编号、有界 HTTP 状态码，以及下节新增的固定输出契约子码。例如，以下为本地响应替身模拟的限流失败，不是真实服务结果：
 
 ```json
 {
   "category": "provider_http",
   "phase": "model_request",
   "case_id": "shortage_only",
-  "http_status": 429
+  "http_status": 429,
+  "contract_code": null
 }
 ```
 
@@ -139,6 +140,40 @@ HTTPX 直接请求不需要 `extra_body`。保留 JSON 输出与全部事实 / �
 
 测试显式使用本地 HTTP 响应替身与合成密钥，不读取现有模型凭据或访问模型服务。不得为验证分类而重新执行旧的真实计划。
 
+
+## 输出契约子码（离线验证）
+
+`failure.category` 保持 `output_contract`，新增可空的 `failure.contract_code`。只有模型请求阶段的输出契约失败且子码属于程序内枚举白名单时才输出字符串；其他阶段、其他大类、未分类错误和异常属性中的非枚举值均为 null。不从异常文字或模型输出拼接子码。
+
+| contract_code | 首个未通过的检查 |
+| --- | --- |
+| `response_json` | HTTP 响应正文无法解析为 JSON |
+| `response_envelope` | 顶层、单一 choices 或 message 对象结构不符 |
+| `completion_state` | finish_reason 缺失或不是 stop，包括截断、工具调用结束等 |
+| `message_contract` | 非 assistant、含工具 / 函数调用、拒绝标记，或 content 不是字符串 |
+| `selection_schema` | 选择 JSON 无效，字段类型、枚举、数量或额外字段不符合严格结构 |
+| `duplicate_selection` | 事实、引用或建议列表包含重复项 |
+| `finding_mismatch` | 未覆盖全部给定事实，或包含不存在的事实编号 |
+| `citation_mismatch` | 选择了不存在的制度引用编号 |
+| `recommendation_mismatch` | 建议不在当前事实允许范围，或遗漏必要人工复核 / 继续关注建议 |
+
+校验按顺序记录首个失败，不能由一个子码推断其他检查都已通过。未知建议代码会先被结构枚举检查拒绝，属于 selection_schema；已知建议与当前事实不符才属于 recommendation_mismatch。没有保存未知编号、原始结束状态、模型原文、Pydantic 详情或异常文字。
+
+例如，本地响应替身返回虚构事实时的失败字段如下，不能冒充实际模型结果：
+
+```json
+{
+  "category": "output_contract",
+  "phase": "model_request",
+  "case_id": "shortage_only",
+  "http_status": null,
+  "contract_code": "finding_mismatch"
+}
+```
+
+正常结果和非异常质量 / usage 缺口仍为 failure=null；大类和中文安全提示、请求内容、严格校验、失败即停、整轮预留与不重试策略保持。新增字段不要求改写旧报告：历史记录缺少 contract_code 只表示未记录，2026-10-20 第三轮实际失败的具体子类型仍然未知。
+
+九类子码通过合成响应经真实适配器、正式 CLI 与落盘报告验证；检查未发送第二例、费用仍未知且全部预留保留，模型原文 / 异常 / 密钥标记不出现在输出。额外测试覆盖异常属性伪造、非请求阶段归因、旧式异常和其他失败大类；原有事实 / 引用 / 建议拒绝测试同时核对子码。测试不读取现有凭据或访问模型。21 项新增回归与既有相关模块共 173 项通过；完整交付验证通过 292 项后端测试、12 个模型回放、17 个 Golden Tasks、前端类型 / 构建和 3 项启动检查，见[离线证据](evidence/output-contract-diagnostics-20261020.json)。
 
 ## 第二轮执行结果（2026-10-19）
 

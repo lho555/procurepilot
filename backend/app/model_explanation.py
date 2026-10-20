@@ -19,13 +19,28 @@ class ModelFailureKind(str, Enum):
     OUTPUT_CONTRACT = "output_contract"
 
 
+class OutputContractCode(str, Enum):
+    RESPONSE_JSON = "response_json"
+    RESPONSE_ENVELOPE = "response_envelope"
+    COMPLETION_STATE = "completion_state"
+    MESSAGE_CONTRACT = "message_contract"
+    SELECTION_SCHEMA = "selection_schema"
+    DUPLICATE_SELECTION = "duplicate_selection"
+    FINDING_MISMATCH = "finding_mismatch"
+    CITATION_MISMATCH = "citation_mismatch"
+    RECOMMENDATION_MISMATCH = "recommendation_mismatch"
+
+
 class ModelFailure(Exception):
     """Only application-owned, safe messages may cross this boundary."""
 
-    def __init__(self, message: str, *, kind: ModelFailureKind = ModelFailureKind.OUTPUT_CONTRACT, http_status: int | None = None):
+    def __init__(self, message: str, *, kind: ModelFailureKind = ModelFailureKind.OUTPUT_CONTRACT,
+                 http_status: int | None = None, contract_code: OutputContractCode | None = None):
         super().__init__(message)
         self.kind = kind
         self.http_status = http_status
+        self.contract_code = (contract_code if kind is ModelFailureKind.OUTPUT_CONTRACT
+                              and type(contract_code) is OutputContractCode else None)
 
 
 class Selection(BaseModel):
@@ -76,18 +91,18 @@ def render_selection(content: str, context: dict) -> str:
     try:
         selection = Selection.model_validate_json(content)
     except (ValidationError, ValueError):
-        raise ModelFailure("模型输出格式无效，未采用该回答。") from None
+        raise ModelFailure("模型输出格式无效，未采用该回答。", contract_code=OutputContractCode.SELECTION_SCHEMA) from None
     for items in (selection.finding_ids, selection.citation_numbers, selection.recommendations):
         if len(items) != len(set(items)):
-            raise ModelFailure("模型输出包含重复依据，未采用该回答。")
+            raise ModelFailure("模型输出包含重复依据，未采用该回答。", contract_code=OutputContractCode.DUPLICATE_SELECTION)
     citations = {item["number"]: item["excerpt"] for item in context["citations"]}
     if set(selection.finding_ids) != set(context["findings"]):
-        raise ModelFailure("模型遗漏或虚构事实，未采用该回答。")
+        raise ModelFailure("模型遗漏或虚构事实，未采用该回答。", contract_code=OutputContractCode.FINDING_MISMATCH)
     if not set(selection.citation_numbers) <= citations.keys():
-        raise ModelFailure("模型引用了不存在的制度依据，未采用该回答。")
+        raise ModelFailure("模型引用了不存在的制度依据，未采用该回答。", contract_code=OutputContractCode.CITATION_MISMATCH)
     if (not set(selection.recommendations) <= context["allowed_recommendations"].keys()
             or context["required_recommendation"] not in selection.recommendations):
-        raise ModelFailure("模型建议不符合当前事实或人工审批边界，未采用该回答。")
+        raise ModelFailure("模型建议不符合当前事实或人工审批边界，未采用该回答。", contract_code=OutputContractCode.RECOMMENDATION_MISMATCH)
     paragraphs = [f"订单 {context['order_id']} 的受控模型分析（合成快照）："]
     paragraphs.extend(context["findings"][key] for key in selection.finding_ids)
     paragraphs.extend(SUGGESTIONS[key] for key in selection.recommendations)
@@ -157,20 +172,23 @@ class ChatCompletionsAdapter:
                             raw.extend(chunk)
                             if len(raw) > 64_000:
                                 raise ModelFailure("模型响应超出限制，未采用该回答。", kind=ModelFailureKind.RESPONSE_LIMIT)
-            data = json.loads(raw)
-            if not isinstance(data, dict):
-                raise ValueError
-            choices = data["choices"]
+            try:
+                data = json.loads(raw)
+            except ValueError:
+                raise ModelFailure("模型响应无效或未完整结束，未采用该回答。", contract_code=OutputContractCode.RESPONSE_JSON) from None
+            choices = data.get("choices") if isinstance(data, dict) else None
             if not isinstance(choices, list) or len(choices) != 1:
-                raise ValueError
+                raise ModelFailure("模型响应无效或未完整结束，未采用该回答。", contract_code=OutputContractCode.RESPONSE_ENVELOPE)
             choice = choices[0]
             if not isinstance(choice, dict) or not isinstance(choice.get("message"), dict):
-                raise ValueError
+                raise ModelFailure("模型响应无效或未完整结束，未采用该回答。", contract_code=OutputContractCode.RESPONSE_ENVELOPE)
             message = choice["message"]
-            if (choice["finish_reason"] != "stop" or message.get("role") != "assistant"
+            if choice.get("finish_reason") != "stop":
+                raise ModelFailure("模型响应无效或未完整结束，未采用该回答。", contract_code=OutputContractCode.COMPLETION_STATE)
+            if (message.get("role") != "assistant"
                     or message.get("tool_calls") or message.get("function_call") or message.get("refusal")
                     or not isinstance(message.get("content"), str)):
-                raise ValueError
+                raise ModelFailure("模型响应无效或未完整结束，未采用该回答。", contract_code=OutputContractCode.MESSAGE_CONTRACT)
             answer = render_selection(message["content"], context)
             # Per-call return values keep concurrent observations isolated. Only
             # verified selection fields and bounded counters leave this boundary.
