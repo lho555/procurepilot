@@ -123,6 +123,21 @@ def claim_inventory(exclude=None):
                 raise ValueError("Invalid settlement timestamp")
             row.update(original_reserved_cny=claim["reserved_cny"], reserved_cny=proof["retained_reserved_cny"],
                        settlement_sha256=hashlib.sha256(settlement_raw).hexdigest())
+        usage_path = path.parent / "usage-reservation.json"
+        if os.path.lexists(usage_path):
+            usage_raw = bounded_bytes(usage_path, 30_000)
+            settlement = json.loads(usage_raw)
+            proof = usage_exposure(path.parent / "plan.json", row)
+            if (set(settlement) != set(proof) | {"schema_version", "policy", "settled_at"}
+                    or type(settlement["schema_version"]) is not int or settlement["schema_version"] != 1
+                    or settlement["policy"] != "known_usage_upper_bound_v1"
+                    or digest({key: settlement[key] for key in proof}) != digest(proof)):
+                raise ValueError("Usage settlement no longer matches evidence")
+            settled = datetime.fromisoformat(settlement["settled_at"])
+            if settled.utcoffset() is None or settled > datetime.now(timezone.utc):
+                raise ValueError("Invalid usage settlement timestamp")
+            row.update(original_reserved_cny=claim["reserved_cny"], reserved_cny=proof["retained_reserved_cny"],
+                       usage_settlement_sha256=hashlib.sha256(usage_raw).hexdigest())
         rows.append(row)
     return rows
 
@@ -182,11 +197,115 @@ def settle_unused(path):
     """Explicit, append-only settlement; claims remain permanently consumed."""
     with claim_guard():
         claim_inventory()  # Refuse corrupt history before adding any record.
+        if os.path.lexists((ROOT / path).resolve().parent / "usage-reservation.json"):
+            raise ValueError("Unused slots must be settled before usage")
         proof = closed_exposure(path)
         record = (ROOT / path).resolve().parent / "unused-reservation.json"
         if os.path.lexists(record):
             raise FileExistsError("Unused slots were already settled")
         value = {"schema_version": 1, "policy": "closed_unused_slots_v1",
+                 "settled_at": datetime.now(timezone.utc).isoformat(), **proof}
+        write_new(record, value)
+    return value
+
+
+def usage_exposure(path, prior):
+    """Reconcile only matched provider usage; all other slots keep full bounds."""
+    path = (ROOT / path).resolve()
+    if (path.name != "plan.json" or path.parent.parent != acceptance_root()
+            or not re.fullmatch(r"[0-9a-f]{32}", path.parent.name) or prior["plan_id"] != path.parent.name):
+        raise ValueError("Invalid usage-settlement path")
+    plan_raw = bounded_bytes(path, 100_000)
+    claim_raw = bounded_bytes(path.parent / "claimed.json", 10_000)
+    report_raw = bounded_bytes(path.parent / "live-report.json", 150_000)
+    plan, claim, report = map(json.loads, (plan_raw, claim_raw, report_raw))
+    specification, requests = plan["spec"], plan["spec"]["requests"]
+    maximum, count = claim["maximum_requests"], report["request_attempts"]
+    if (type(maximum) is not int or not 1 <= maximum <= len(CASE_IDS)
+            or type(count) is not int or not 0 <= count <= maximum
+            or len(requests) != maximum or specification["maximum_requests"] != maximum
+            or claim["plan_sha256"] != digest(plan) or report["plan_sha256"] != digest(plan)
+            or prior["claim_sha256"] != hashlib.sha256(claim_raw).hexdigest()
+            or report["kind"] != "bailian_live_acceptance" or report["planned_requests"] != maximum
+            or report["reserved_cny"] != claim["reserved_cny"]
+            or claim["reserved_cny"] != specification["reserved_cny"]
+            or specification["reserved_cny"] != str(PER_CALL * maximum)
+            or specification["per_request_reserved_cny"] != str(PER_CALL)
+            or report["model"] != specification["model"] or specification["model"] != MODEL
+            or report["endpoint"] != specification["endpoint"] or specification["endpoint"] != ENDPOINT
+            or report["enable_thinking"] is not False or specification["enable_thinking"] is not False
+            or specification["input_token_cap"] != INPUT_CAP or specification["output_token_reserve"] != OUTPUT_CAP
+            or specification["input_cny_per_million"] != str(INPUT_RATE)
+            or specification["output_cny_per_million"] != str(OUTPUT_RATE)
+            or report["source_sha256"] != specification["source_sha256"]
+            or report["case_sha256"] != specification["case_sha256"]):
+        raise ValueError("Usage evidence does not match the original plan")
+    ids = [request["case_id"] for request in requests]
+    observations = report["observations"]
+    if (len(set(ids)) != maximum or any(case_id not in CASE_IDS for case_id in ids)
+            or not isinstance(observations, list) or len(observations) > count
+            or type(report["validated_responses"]) is not int or report["validated_responses"] != len(observations)
+            or [item["case_id"] for item in observations] != ids[:len(observations)]
+            or report.get("selected_case_ids", ids if plan["schema_version"] == 1 else None) != ids):
+        raise ValueError("Invalid usage observation sequence")
+    status = report["status"]
+    if (status not in {"stopped", "completed", "completed_with_quality_or_usage_gaps"}
+            or type(report["passed"]) is not bool or report["passed"] != (status == "completed")
+            or (status != "stopped" and (count != maximum or len(observations) != maximum or report.get("failure")))):
+        raise ValueError("Usage settlement requires terminal evidence")
+    finished = datetime.fromisoformat(report["finished_at"])
+    if finished.utcoffset() is None or finished > datetime.now(timezone.utc):
+        raise ValueError("Invalid usage report timestamp")
+    if ({p.name for p in path.parent.glob("attempt-*.json")} != {f"attempt-{case_id}.json" for case_id in ids[:count]}
+            or {p.name for p in path.parent.glob("result-*.json")} != {f"result-{item['case_id']}.json" for item in observations}):
+        raise ValueError("Usage marker/result inventory is inconsistent")
+    attempts, results, verified, reduction = [], [], [], Decimal("0")
+    for request in requests[:count]:
+        raw = bounded_bytes(path.parent / f"attempt-{request['case_id']}.json", 10_000)
+        if json.loads(raw) != {"case_id": request["case_id"], "body_sha256": request["body_sha256"],
+                               "reserved_cny": str(PER_CALL), "state": "reserved_before_request"}:
+            raise ValueError("Usage attempt does not match the original request")
+        attempts.append({"case_id": request["case_id"], "sha256": hashlib.sha256(raw).hexdigest()})
+    for observation in observations:
+        raw = bounded_bytes(path.parent / f"result-{observation['case_id']}.json", 50_000)
+        if digest(json.loads(raw)) != digest(observation) or observation["http_success"] is not True:
+            raise ValueError("Usage result does not match the terminal report")
+        results.append({"case_id": observation["case_id"], "sha256": hashlib.sha256(raw).hexdigest()})
+        usage = observation["usage"]
+        if (not isinstance(usage, dict) or set(usage) != {"prompt_tokens", "completion_tokens"}
+                or type(usage["prompt_tokens"]) is not int or not 0 < usage["prompt_tokens"] <= INPUT_CAP
+                or type(usage["completion_tokens"]) is not int or not 0 < usage["completion_tokens"] <= OUTPUT_CAP):
+            continue  # Unknown/invalid/zero usage never creates a discount.
+        bound = (usage["prompt_tokens"] * INPUT_RATE + usage["completion_tokens"] * OUTPUT_RATE) / 1_000_000
+        if observation["cost_estimate_upper_cny"] != str(bound):
+            raise ValueError("Usage cost does not match the highest-rate bound")
+        verified.append({"case_id": observation["case_id"], "usage": usage, "retained_upper_cny": str(bound)})
+        reduction += PER_CALL - bound
+    if not verified:
+        raise ValueError("No verified positive usage to reconcile")
+    retained = Decimal(prior["reserved_cny"]) - reduction
+    if not Decimal("0") < retained <= Decimal(prior["reserved_cny"]):
+        raise ValueError("Invalid usage reduction")
+    return {"plan_sha256": hashlib.sha256(plan_raw).hexdigest(), "claim_sha256": hashlib.sha256(claim_raw).hexdigest(),
+            "report_sha256": hashlib.sha256(report_raw).hexdigest(), "attempts": attempts, "results": results,
+            "verified_usage": verified, "maximum_requests": maximum, "request_attempts": count,
+            "unknown_usage_attempts": count - len(verified), "prior_reserved_cny": prior["reserved_cny"],
+            "unused_settlement_sha256": prior.get("settlement_sha256"), "retained_reserved_cny": str(retained)}
+
+
+def settle_usage(path):
+    """Explicit append-only reconciliation; no claims or original results change."""
+    path = (ROOT / path).resolve()
+    with claim_guard():
+        inventory = claim_inventory()
+        record = path.parent / "usage-reservation.json"
+        if os.path.lexists(record):
+            raise FileExistsError("Usage was already reconciled")
+        prior = next((row for row in inventory if row["plan_id"] == path.parent.name), None)
+        if prior is None:
+            raise ValueError("Usage settlement requires an existing claim")
+        proof = usage_exposure(path, prior)
+        value = {"schema_version": 1, "policy": "known_usage_upper_bound_v1",
                  "settled_at": datetime.now(timezone.utc).isoformat(), **proof}
         write_new(record, value)
     return value

@@ -1,0 +1,573 @@
+{
+  "schema_version": 1,
+  "kind": "latest_version_four_case_live_validation",
+  "passed": true,
+  "execution_commit": "d756d0585f9225b7cd11fc1980e32b790dec4772",
+  "source_sha256": "caf18aae347e3a07e04ee435224d92ad8649672d8a8eafb0a7eaee1091501447",
+  "plan_id": "61ffc9d582f346fdb3bd23745a0d1104",
+  "report_sha256": "57ce9f0e96bb58648fa58eeeadb46133cf23ed31803140a854ad175a0b9c8ccb",
+  "claim_sha256": "a290068992dbb316a973710b5a0d18360f8229f044164e179b28f8a50e70d358",
+  "request_fingerprints": [
+    {
+      "case_id": "shortage_and_delay",
+      "body_sha256": "27130fb7be36a052e67a07aa9f6faa3a4b7c24cf152afcc405c81a3e236e5096"
+    },
+    {
+      "case_id": "shortage_only",
+      "body_sha256": "c7e6955ef06093cd74a81174753aeab569bca0e1fa3035e6f9852ccac5e119c2"
+    },
+    {
+      "case_id": "delay_only",
+      "body_sha256": "5053083f67663119c0e232c1aafe9d306096eb9cd9a67f920bdc98f353d4a0de"
+    },
+    {
+      "case_id": "healthy_order",
+      "body_sha256": "a0e9cfa80935329e1d6f44dc8ca2ad746ff8b05ed380a4eb7a0b8219d49a2875"
+    }
+  ],
+  "report": {
+    "schema_version": 1,
+    "kind": "bailian_live_acceptance",
+    "passed": true,
+    "status": "completed",
+    "failure": null,
+    "budget_review": {
+      "prior_claims": [
+        {
+          "plan_id": "41b392e3a496407fb9653c26f3543936",
+          "claim_sha256": "832ea55995267018d51c6461a1cabfb4d93de7a3a562970ad04164189c8fd5dd",
+          "reserved_cny": "0.0000000",
+          "original_reserved_cny": "4.7805312",
+          "settlement_sha256": "920b52ffd443d9d65cd77f93e7e03bfd1693fe4eaaec7166d0346f9ffb7b16b8"
+        },
+        {
+          "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+          "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+          "reserved_cny": "1.1961288",
+          "original_reserved_cny": "4.7805312",
+          "settlement_sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2",
+          "usage_settlement_sha256": "e7f2f0f8a9050686afa7866f59d69239527f1d07788593e996252405a41eb392"
+        },
+        {
+          "plan_id": "8ceee086892e4a15addaf94de0143093",
+          "claim_sha256": "610165f4904dad64c9c152093e2a5b03348cf0601ab267fd285823a620670356",
+          "reserved_cny": "0.0041196",
+          "original_reserved_cny": "4.7805312",
+          "usage_settlement_sha256": "d79ebfcb43d9762a506f990a134fc5e0c183d663ea65aed2d52a1638c1cf7682"
+        },
+        {
+          "plan_id": "acc1ba56e1f14a089bade5e0283e1ea1",
+          "claim_sha256": "c7bac01adf4d3e34f585d2ee5c0129c3618bdc06abb23ac95d1468077cd6a0fd",
+          "reserved_cny": "1.1951328",
+          "original_reserved_cny": "2.3902656",
+          "settlement_sha256": "4e6d2000bcf75ce3ec4c6284c8124a9ccb28168e2affe6c0060ba2291df22b58"
+        },
+        {
+          "plan_id": "b07ccaa37d3544b4ad81fe311c2e571a",
+          "claim_sha256": "5373f1d08b5e660d1efb3d70abab8767797c5a815b199dc081761d7e7a497945",
+          "reserved_cny": "0.0011280",
+          "original_reserved_cny": "1.1951328",
+          "usage_settlement_sha256": "3597e67bc20d6ff6573095045aa1da36f216fdacd3d974e887c7aac64c9dcef1"
+        },
+        {
+          "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+          "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+          "reserved_cny": "1.1961288",
+          "original_reserved_cny": "4.7805312",
+          "settlement_sha256": "634cf0052c007fda7c2ae69f64c42d1cd37d968c28bb0f151d28eda718857f7f",
+          "usage_settlement_sha256": "c004d7e4031358214b7bf5099bd51ec89390018dd91a87e8f0c10cf8764c1a53"
+        }
+      ],
+      "prior_reserved_cny": "3.5926380",
+      "proposed_reserved_cny": "4.7805312",
+      "aggregate_reserved_cny": "8.3731692",
+      "total_cap_cny": "12",
+      "unreserved_before_claim_cny": "8.4073620",
+      "can_claim": true
+    },
+    "model": "qwen3.7-flash",
+    "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+    "enable_thinking": false,
+    "approved_budget_cny": "12",
+    "reserved_cny": "4.7805312",
+    "reservation_refunded": false,
+    "planned_requests": 4,
+    "request_attempts": 4,
+    "selected_case_ids": [
+      "shortage_and_delay",
+      "shortage_only",
+      "delay_only",
+      "healthy_order"
+    ],
+    "validated_responses": 4,
+    "cost_estimate_upper_cny": "0.0041964",
+    "cost_scope": "Usage at highest documented token rates; not a provider invoice. Uncertain outcomes keep the full reservation.",
+    "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
+    "case_sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a",
+    "source_sha256": "caf18aae347e3a07e04ee435224d92ad8649672d8a8eafb0a7eaee1091501447",
+    "plan_sha256": "3434d798c7f3b4cb89e6b90fbcb76631a4e6f0372ea99a423922889107a8d13a",
+    "observations": [
+      {
+        "case_id": "shortage_and_delay",
+        "http_success": true,
+        "request_elapsed_ms": 2850.412,
+        "usage": {
+          "prompt_tokens": 647,
+          "completion_tokens": 73
+        },
+        "cost_estimate_upper_cny": "0.0011268",
+        "selection": {
+          "finding_ids": [
+            "stock:1",
+            "delivery"
+          ],
+          "citation_numbers": [
+            1
+          ],
+          "recommendations": [
+            "COMPARE_SUPPLIERS",
+            "HUMAN_REVIEW",
+            "VERIFY_DELIVERY"
+          ]
+        },
+        "label_checks": {
+          "id": "shortage_and_delay",
+          "passed": true,
+          "checks": {
+            "outcome": true,
+            "request_budget": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true
+          },
+          "metrics": {
+            "task_success": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true,
+            "failure_handling": null,
+            "unexpected_acceptance": null
+          },
+          "expected_outcome": "accepted",
+          "actual_outcome": "accepted",
+          "error_type": null,
+          "provider_attempts": 1,
+          "local_validation_ms": 1.328,
+          "selected_citations": [
+            1
+          ],
+          "selected_recommendations": [
+            "COMPARE_SUPPLIERS",
+            "HUMAN_REVIEW",
+            "VERIFY_DELIVERY"
+          ]
+        }
+      },
+      {
+        "case_id": "shortage_only",
+        "http_success": true,
+        "request_elapsed_ms": 1611.751,
+        "usage": {
+          "prompt_tokens": 620,
+          "completion_tokens": 66
+        },
+        "cost_estimate_upper_cny": "0.0010608",
+        "selection": {
+          "finding_ids": [
+            "stock:1",
+            "delivery"
+          ],
+          "citation_numbers": [
+            1
+          ],
+          "recommendations": [
+            "COMPARE_SUPPLIERS",
+            "HUMAN_REVIEW"
+          ]
+        },
+        "label_checks": {
+          "id": "shortage_only",
+          "passed": true,
+          "checks": {
+            "outcome": true,
+            "request_budget": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true
+          },
+          "metrics": {
+            "task_success": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true,
+            "failure_handling": null,
+            "unexpected_acceptance": null
+          },
+          "expected_outcome": "accepted",
+          "actual_outcome": "accepted",
+          "error_type": null,
+          "provider_attempts": 1,
+          "local_validation_ms": 1.167,
+          "selected_citations": [
+            1
+          ],
+          "selected_recommendations": [
+            "COMPARE_SUPPLIERS",
+            "HUMAN_REVIEW"
+          ]
+        }
+      },
+      {
+        "case_id": "delay_only",
+        "http_success": true,
+        "request_elapsed_ms": 1572.428,
+        "usage": {
+          "prompt_tokens": 613,
+          "completion_tokens": 64
+        },
+        "cost_estimate_upper_cny": "0.0010428",
+        "selection": {
+          "finding_ids": [
+            "stock:1",
+            "delivery"
+          ],
+          "citation_numbers": [
+            1
+          ],
+          "recommendations": [
+            "HUMAN_REVIEW",
+            "VERIFY_DELIVERY"
+          ]
+        },
+        "label_checks": {
+          "id": "delay_only",
+          "passed": true,
+          "checks": {
+            "outcome": true,
+            "request_budget": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true
+          },
+          "metrics": {
+            "task_success": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true,
+            "failure_handling": null,
+            "unexpected_acceptance": null
+          },
+          "expected_outcome": "accepted",
+          "actual_outcome": "accepted",
+          "error_type": null,
+          "provider_attempts": 1,
+          "local_validation_ms": 0.931,
+          "selected_citations": [
+            1
+          ],
+          "selected_recommendations": [
+            "HUMAN_REVIEW",
+            "VERIFY_DELIVERY"
+          ]
+        }
+      },
+      {
+        "case_id": "healthy_order",
+        "http_success": true,
+        "request_elapsed_ms": 1362.798,
+        "usage": {
+          "prompt_tokens": 585,
+          "completion_tokens": 55
+        },
+        "cost_estimate_upper_cny": "0.000966",
+        "selection": {
+          "finding_ids": [
+            "stock:1",
+            "delivery"
+          ],
+          "citation_numbers": [
+            1
+          ],
+          "recommendations": [
+            "MONITOR"
+          ]
+        },
+        "label_checks": {
+          "id": "healthy_order",
+          "passed": true,
+          "checks": {
+            "outcome": true,
+            "request_budget": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true
+          },
+          "metrics": {
+            "task_success": true,
+            "grounded_facts": true,
+            "citation_applicability": true,
+            "recommendation_coverage": true,
+            "failure_handling": null,
+            "unexpected_acceptance": null
+          },
+          "expected_outcome": "accepted",
+          "actual_outcome": "accepted",
+          "error_type": null,
+          "provider_attempts": 1,
+          "local_validation_ms": 0.871,
+          "selected_citations": [
+            1
+          ],
+          "selected_recommendations": [
+            "MONITOR"
+          ]
+        }
+      }
+    ],
+    "finished_at": "2026-10-21T01:54:16.655329+00:00"
+  },
+  "budget": {
+    "cash_cap_cny": "12",
+    "known_prior_usage_calls_reconciled": 7,
+    "known_prior_usage_upper_cny": "0.0072396",
+    "unknown_prior_attempts": 3,
+    "unknown_prior_retained_upper_cny": "3.5853984",
+    "new_run_reserved_cny": "4.7805312",
+    "effective_reserved_cny": "8.3731692",
+    "unreserved_cny": "3.6268308",
+    "new_run_usage_cost_upper_estimate_cny": "0.0041964",
+    "actual_project_total_cny": null,
+    "new_run_reservation_reconciled": false,
+    "free_token_discount_cny": "0"
+  },
+  "usage_settlements": [
+    {
+      "plan_id": "7ccae83893e34f6f98c880936fb175d8",
+      "record": {
+        "schema_version": 1,
+        "policy": "known_usage_upper_bound_v1",
+        "settled_at": "2026-10-21T01:53:58.047309+00:00",
+        "plan_sha256": "a8d4e3b19a1feb77e2cfaa13d26fded1eae03a492dea5d8f3ded51034410c055",
+        "claim_sha256": "739036591ae2ea858e98e578e08c1d263c1c57d7f3530f3d247b556e9c8c1c1a",
+        "report_sha256": "f04e382f233e9ce15170456ac297fb508e0d432a9b49f2f5650e1f66f12a683d",
+        "attempts": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "1816f48b79d28097720a4babaf2fc1209a9a5f3634d718cc7f689d15ced1f29b"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "1532ac50ae0ab5cbc95b0a6254167d7db2028da6533cc4926b1b385bc885537d"
+          }
+        ],
+        "results": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "0ccd44e2dbb7b36e4261166697a48007eaf986b6ef7252663035d1a1e70d9ba0"
+          }
+        ],
+        "verified_usage": [
+          {
+            "case_id": "shortage_and_delay",
+            "usage": {
+              "prompt_tokens": 538,
+              "completion_tokens": 73
+            },
+            "retained_upper_cny": "0.000996"
+          }
+        ],
+        "maximum_requests": 4,
+        "request_attempts": 2,
+        "unknown_usage_attempts": 1,
+        "prior_reserved_cny": "2.3902656",
+        "unused_settlement_sha256": "4a0aaee5f30c17f98bb8970aeeb76d8d640f0eb1080f1bb01237ef37f0210cd2",
+        "retained_reserved_cny": "1.1961288"
+      },
+      "sha256": "e7f2f0f8a9050686afa7866f59d69239527f1d07788593e996252405a41eb392"
+    },
+    {
+      "plan_id": "8ceee086892e4a15addaf94de0143093",
+      "record": {
+        "schema_version": 1,
+        "policy": "known_usage_upper_bound_v1",
+        "settled_at": "2026-10-21T01:53:58.682932+00:00",
+        "plan_sha256": "aada1157ace1d1183b011765c409bc065e45cb7832223a6825d7c67498dd0401",
+        "claim_sha256": "610165f4904dad64c9c152093e2a5b03348cf0601ab267fd285823a620670356",
+        "report_sha256": "6de5b551a18750b2d411006bf3d1ac2f3df430b26d520485e0b56f3c38231840",
+        "attempts": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "4ea14ae70ee9eaea0e9d83f8baf25566cd427f1a356b5b1202cc5c011b3e825f"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "3d30969b0809b8c7e641525a5165c4accccd84b2f1e4222b138101eb3e2ba62a"
+          },
+          {
+            "case_id": "delay_only",
+            "sha256": "3ec4f681c2e95ca44684417ca545a0ed711bcf5ac337c95c8339fa6cd96c3247"
+          },
+          {
+            "case_id": "healthy_order",
+            "sha256": "2ec463bb1c95abb42030c40d4a004603e1b9c11c9a4515dc3e4efe2119a7b575"
+          }
+        ],
+        "results": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "3ff29005677390b08cd6bde527a171c73f965dc36feb990e3775da7f919ff0be"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "bd5895bbe894f20808ed78e8deaf8786b17d18b7effb8b86c36feab94e15cf0e"
+          },
+          {
+            "case_id": "delay_only",
+            "sha256": "359ce222134425bd6744eba23c27623d113fc4d112f3a23f72e2d003965dfaed"
+          },
+          {
+            "case_id": "healthy_order",
+            "sha256": "8fc2d17343d7f485be62b5026e88face1d360648fa2b10a8bcd0530cbea7cd1b"
+          }
+        ],
+        "verified_usage": [
+          {
+            "case_id": "shortage_and_delay",
+            "usage": {
+              "prompt_tokens": 612,
+              "completion_tokens": 73
+            },
+            "retained_upper_cny": "0.0010848"
+          },
+          {
+            "case_id": "shortage_only",
+            "usage": {
+              "prompt_tokens": 585,
+              "completion_tokens": 85
+            },
+            "retained_upper_cny": "0.00111"
+          },
+          {
+            "case_id": "delay_only",
+            "usage": {
+              "prompt_tokens": 578,
+              "completion_tokens": 64
+            },
+            "retained_upper_cny": "0.0010008"
+          },
+          {
+            "case_id": "healthy_order",
+            "usage": {
+              "prompt_tokens": 550,
+              "completion_tokens": 55
+            },
+            "retained_upper_cny": "0.000924"
+          }
+        ],
+        "maximum_requests": 4,
+        "request_attempts": 4,
+        "unknown_usage_attempts": 0,
+        "prior_reserved_cny": "4.7805312",
+        "unused_settlement_sha256": null,
+        "retained_reserved_cny": "0.0041196"
+      },
+      "sha256": "d79ebfcb43d9762a506f990a134fc5e0c183d663ea65aed2d52a1638c1cf7682"
+    },
+    {
+      "plan_id": "b07ccaa37d3544b4ad81fe311c2e571a",
+      "record": {
+        "schema_version": 1,
+        "policy": "known_usage_upper_bound_v1",
+        "settled_at": "2026-10-21T01:53:59.321572+00:00",
+        "plan_sha256": "8365b85c4b0821ed10be44bbcefd5a6b8096e23310b376c9b63a740c941c1958",
+        "claim_sha256": "5373f1d08b5e660d1efb3d70abab8767797c5a815b199dc081761d7e7a497945",
+        "report_sha256": "b736179400f11bb5f3ab020d5f7bd352080feb0fb0ea4189fe21a7bab96e51da",
+        "attempts": [
+          {
+            "case_id": "shortage_only",
+            "sha256": "b1a8496c1c6a641de326b5142a55ba10709a45136438b3cbacfbf606d285fc2a"
+          }
+        ],
+        "results": [
+          {
+            "case_id": "shortage_only",
+            "sha256": "2d74720d5b75009be80a8b07cd317179bcf5e5c7d761bcf445a4dc0fc26f5279"
+          }
+        ],
+        "verified_usage": [
+          {
+            "case_id": "shortage_only",
+            "usage": {
+              "prompt_tokens": 620,
+              "completion_tokens": 80
+            },
+            "retained_upper_cny": "0.001128"
+          }
+        ],
+        "maximum_requests": 1,
+        "request_attempts": 1,
+        "unknown_usage_attempts": 0,
+        "prior_reserved_cny": "1.1951328",
+        "unused_settlement_sha256": null,
+        "retained_reserved_cny": "0.0011280"
+      },
+      "sha256": "3597e67bc20d6ff6573095045aa1da36f216fdacd3d974e887c7aac64c9dcef1"
+    },
+    {
+      "plan_id": "b2e4b1b69fe24172ba00312da20f4af5",
+      "record": {
+        "schema_version": 1,
+        "policy": "known_usage_upper_bound_v1",
+        "settled_at": "2026-10-21T01:53:59.976506+00:00",
+        "plan_sha256": "e5e3fe2a5d510a94d5cd1bf980d77992caa4f6405b4e60b684977bd80ee51529",
+        "claim_sha256": "a31e260e85209b67c49c3e037491ac10a22dbb8af65a9d0170cb3855198608ac",
+        "report_sha256": "cf262d06b49c67e4070b30ba616dfccbd5e15730d826aac00146119e71a49324",
+        "attempts": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "1816f48b79d28097720a4babaf2fc1209a9a5f3634d718cc7f689d15ced1f29b"
+          },
+          {
+            "case_id": "shortage_only",
+            "sha256": "1532ac50ae0ab5cbc95b0a6254167d7db2028da6533cc4926b1b385bc885537d"
+          }
+        ],
+        "results": [
+          {
+            "case_id": "shortage_and_delay",
+            "sha256": "5551de5148666e257c1c1975a96b03bbc51134acc8f0337f14bf4d2a9adff585"
+          }
+        ],
+        "verified_usage": [
+          {
+            "case_id": "shortage_and_delay",
+            "usage": {
+              "prompt_tokens": 538,
+              "completion_tokens": 73
+            },
+            "retained_upper_cny": "0.000996"
+          }
+        ],
+        "maximum_requests": 4,
+        "request_attempts": 2,
+        "unknown_usage_attempts": 1,
+        "prior_reserved_cny": "2.3902656",
+        "unused_settlement_sha256": "634cf0052c007fda7c2ae69f64c42d1cd37d968c28bb0f151d28eda718857f7f",
+        "retained_reserved_cny": "1.1961288"
+      },
+      "sha256": "c004d7e4031358214b7bf5099bd51ec89390018dd91a87e8f0c10cf8764c1a53"
+    }
+  ],
+  "privacy": {
+    "synthetic_cases_only": true,
+    "raw_model_response_exported": false,
+    "credential_exported": false,
+    "original_history_unchanged": true
+  },
+  "limitations": [
+    "Four fixed synthetic positive cases at one latest source version only.",
+    "Quality checks use existing fixed labels; independent human review and real negative-case validation remain incomplete.",
+    "Provider usage at highest rates is an estimate, not an invoice; three historical attempts still have unknown usage.",
+    "Four-attempt authorization exhausted; no retries or additional model calls."
+  ]
+}
