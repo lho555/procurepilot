@@ -75,11 +75,11 @@ def test_frozen_case_profile_request_and_source_tampering_refused_before_credent
     if damage == "count": plan["spec"]["maximum_requests"] = 2
     if damage == "request": plan["spec"]["requests"][0]["body_sha256"] = "fixture-sensitive"
     if damage == "positive_as_v3": plan["schema_version"] = 3
-    path.write_text(json.dumps(plan))
+    path.write_text(json.dumps(plan), encoding="utf-8")
     if damage == "case_file":
         target = workspace / "evals/adversarial_cases.json"
-        value = json.loads(target.read_text());value["cases"][0]["citations"][1]["excerpt"] += " changed"
-        target.write_text(json.dumps(value))
+        value = json.loads(target.read_text(encoding="utf-8"));value["cases"][0]["citations"][1]["excerpt"] += " changed"
+        target.write_text(json.dumps(value), encoding="utf-8")
     before = files(workspace)
     with pytest.raises(ValueError): asyncio.run(live.execute(path, lambda: pytest.fail("Credentials before scope validation")))
     assert files(workspace) == before and not (path.parent / "claimed.json").exists()
@@ -103,7 +103,7 @@ def test_adversarial_safe_completion_uses_one_request_with_no_tools_and_keeps_fu
         "outcome": "safe_completion", "application_guard_rejected": False, "model_following_passed": True}
     assert live.claim_inventory()[0]["reserved_cny"] == str(live.PER_CALL)
     assert not (path.parent / "usage-reservation.json").exists()
-    assert not any("fixture-sensitive" in p.read_text() for p in path.parent.glob("*.json"))
+    assert not any("fixture-sensitive" in p.read_text(encoding="utf-8") for p in path.parent.glob("*.json"))
     with pytest.raises(FileExistsError): live.validate_plan(path)
 
 

@@ -389,3 +389,5 @@ HTTPX 直接请求不需要 `extra_body`。保留 JSON 输出与全部事实 / �
 报告及 CLI 对新 profile 附加 `adversarial_assessment`：`safe_completion` 表示通过契约 / 固定标注且有可信 usage；`guard_rejected` 表示应用拦截了输出契约错误，整体 passed=false、模型遵循为 false；`model_quality_failed` 表示合法选择未满足引用 / 建议标注，passed=false；供应商错误、超时或可信用量缺口为 `inconclusive`。用量缺口可保留 model_following_passed=true，但整体仍不通过；不会把所有失败转成“安全通过”。
 
 仅新增单次案例不代表覆盖所有提示注入、供应商真实故障或专家审查。该单例的领取全额保留、旧计划不能重跑，不自动重试或结算释放这次调用；既有两种结算仅支持原四正例的终止证明。无依据在请求前拦截及可控传输故障仍保留各自的离线证据类型。
+
+跨平台验证修正：首轮 CI #17 的 Ubuntu 通过，Windows 在新增测试读取中文题集时使用默认 cp1252 失败。现已仅将该测试模块的文本读写显式指定 UTF-8，不改应用代码 / 提示词 / 断言；开启默认编码告警并视为错误后，模块 25 项通过。原在线执行及本地 415 项报告仍绑定修复前源码，不重跑模型或将旧本地报告冒称新源码全量运行；最终跨平台状态以 PR 检查为准。证据见 [windows-encoding-fix-20261021.json](evidence/windows-encoding-fix-20261021.json)。

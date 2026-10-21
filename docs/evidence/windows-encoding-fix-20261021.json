@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "kind": "windows_test_fixture_utf8_fix",
+  "ci_failure_run": "https://github.com/lho555/procurepilot/actions/runs/39532853510",
+  "ci_failure_commit": "85413ff141307051a518f4ed07d700b84f4cc1e6",
+  "failed_test": "backend/tests/test_adversarial_acceptance.py::test_frozen_case_profile_request_and_source_tampering_refused_before_credentials[case_file]",
+  "failure": "UnicodeDecodeError while decoding the UTF-8 Chinese fixture with Windows cp1252 before the mutation assertion",
+  "artifact_sha256": "5ab05d1520c4c964d1ba20a814b219844c21400746883084381284c4811c003c",
+  "focused_codec_reproduction": {
+    "encoding": "charmap",
+    "reason": "character maps to <undefined>",
+    "start": 234,
+    "end": 235
+  },
+  "fix": "Use explicit UTF-8 in all text reads/writes in the new adversarial test module; no production code, input, model prompt or assertion changes.",
+  "verification_command": "python -X warn_default_encoding -W error::EncodingWarning -m pytest backend/tests/test_adversarial_acceptance.py -q -o pythonpath=backend --basetemp=.local/adversarial-encoding-regression-20261021",
+  "verification_result": "25 passed in 3.92s",
+  "source": {
+    "commit": "85413ff141307051a518f4ed07d700b84f4cc1e6",
+    "sha256": "d6c9f8901ded037091e9e36862f96a2c491015c313d8b7601215bb0ff079efa0",
+    "files": [
+      {
+        "path": ".env.example",
+        "sha256": "bc586f4e7f9be2bce835157dfa1003cf8c495ae3a1820388a132aaab911363cb"
+      },
+      {
+        "path": ".gitattributes",
+        "sha256": "0c804e9065f82a423340283fdf3887088375b575b3143f4fcfd287ae29e99960"
+      },
+      {
+        "path": ".github/workflows/verify.yml",
+        "sha256": "98317b2fa695d9b3d1dbcbabd7dfa04bfeb7e5bbab24f30584bfb528e83366b0"
+      },
+      {
+        "path": ".gitignore",
+        "sha256": "e76fa63a3866869c591a6ed86d94161d4c59909235a427853e7faa7c3d17dbb6"
+      },
+      {
+        "path": "backend/alembic.ini",
+        "sha256": "4be35c86b24192bde1327811488c4fcbc1f446b8c1e688fbbcba8f27640a252b"
+      },
+      {
+        "path": "backend/app/__init__.py",
+        "sha256": "0d5640d20789ecbed92a8c040ad06c5b80a5cc740f77e43b5fbfd0d1fe285a1a"
+      },
+      {
+        "path": "backend/app/agent.py",
+        "sha256": "377a706d58f920804ecfe284b812c31a37b5c4b6eaf7c085410b46d8ac3f6cb9"
+      },
+      {
+        "path": "backend/app/agent_routes.py",
+        "sha256": "6f36700f24954613002fc2c6824e33beafda1a4969ec26c1f34f62a5537ce31c"
+      },
+      {
+        "path": "backend/app/agent_tools.py",
+        "sha256": "54d18b61fcf832e609b2d05f189093262a45920b136a45a3578307aea4f6d2d8"
+      },
+      {
+        "path": "backend/app/approval.py",
+        "sha256": "e23970a29f43d55218421f9090ddb96c6a02b018f52bb46737aa6535c66b8475"
+      },
+      {
+        "path": "backend/app/config.py",
+        "sha256": "38a395dfd5ab140067bc57c7930a7d4760d2f22166b6c05c8a4bbf2066a58139"
+      },
+      {
+        "path": "backend/app/database.py",
+        "sha256": "67ea409ac2c3b6550c3794870409570d4eaca2c22a1a489ceca5ee660d066e61"
+      },
+      {
+        "path": "backend/app/import_knowledge.py",
+        "sha256": "fe23153d0348fa007cdacb033476d52caae7c7a85ba439fc78fd6829e627744f"
+      },
+      {
+        "path": "backend/app/knowledge.py",
+        "sha256": "7209e8e7e1ba5b1f9e16187320a973c530d355e0e865a29b783b309092e3e264"
+      },
+      {
+        "path": "backend/app/knowledge_routes.py",
+        "sha256": "2715ceced9aa931b0069641cefee47e1cc3538e06ed34e6f44334fc51d3a4c50"
+      },
+      {
+        "path": "backend/app/llm_adapter.py",
+        "sha256": "675706016e691aea5e7af3363f602857ea46b8d9c1b97e8b0c6bc5f6d8e2ead3"
+      },
+      {
+        "path": "backend/app/main.py",
+        "sha256": "d044f16ced99f2c6fb4993ccbcece1369daf59ed7b35889c1617170990bec405"
+      },
+      {
+        "path": "backend/app/mcp_tools.py",
+        "sha256": "5ac419fdd698892f32af5f37646fce4d46dcdeea6ad2d1b175c2a0e9c97560b6"
+      },
+      {
+        "path": "backend/app/model_explanation.py",
+        "sha256": "56f4c1c2580f073748821291bf5d819b275515b504c6ef523ecd6e8f8c7c48db"
+      },
+      {
+        "path": "backend/app/models.py",
+        "sha256": "2168ac9ddd105206eac06248244c36eb049ac382177b07ac3a2cf7f1a6ea4081"
+      },
+      {
+        "path": "backend/app/routes.py",
+        "sha256": "a4df54d7dc18944f2d5d396891889acfe08a0105cc8e8407b94bea9b20362250"
+      },
+      {
+        "path": "backend/app/schemas.py",
+        "sha256": "dc1bbab1090236f9d36aa8260eba0362b9bf50f07af612dcc5fa3b6be4bbe88f"
+      },
+      {
+        "path": "backend/app/seed.py",
+        "sha256": "ac703136b92f60cdb725391612419470fac4f48acdc289b76b2b992f5408ae49"
+      },
+      {
+        "path": "backend/app/workflow.py",
+        "sha256": "47646e15b7e5ba59d27061e74319008e9d5559592e4cb9d316c383ccfd6c4835"
+      },
+      {
+        "path": "backend/migrations/env.py",
+        "sha256": "987649edad48046d3662057fe1043df65a4dd0d1f6f6635a538ab6a0a4fb3a34"
+      },
+      {
+        "path": "backend/migrations/script.py.mako",
+        "sha256": "07617ab1f841dd6e0cc5ea6863c83ab41e654d15f36d760fe668e51994641770"
+      },
+      {
+        "path": "backend/migrations/versions/0001_core.py",
+        "sha256": "bcd422ad4bf9f8e6661f6f8ca06be61848c5e5d51b2e229f0eabef409a8ba479"
+      },
+      {
+        "path": "backend/migrations/versions/0002_approval.py",
+        "sha256": "073d8caa242769dbd9d6014742a316ff947e24983e73fab07e3d7fd4647d4b90"
+      },
+      {
+        "path": "backend/migrations/versions/0003_workflow.py",
+        "sha256": "790a3eeec5a393759d0c37ae789d8c459d33f8585dfb0c7148f3b970b88bc0a2"
+      },
+      {
+        "path": "backend/requirements.txt",
+        "sha256": "2637b2a1992513d04b4e03e3a4d3a9ed4436fe8747251ec13b7c50c23d4b1834"
+      },
+      {
+        "path": "backend/tests/conftest.py",
+        "sha256": "ef8a3539a37ee9213a03faea0349adef68e2c012ec43d9e0c5e9a7638db30eee"
+      },
+      {
+        "path": "backend/tests/test_adversarial_acceptance.py",
+        "sha256": "f8f12f91e5fdd96bd22fda35a86bdcd3e6af6787d6ff02c64fba793ee86aedbf"
+      },
+      {
+        "path": "backend/tests/test_agent.py",
+        "sha256": "2524d46df9d08f60221a238242d30bbb479bc612727f26e7300987c488712892"
+      },
+      {
+        "path": "backend/tests/test_approval.py",
+        "sha256": "92a4f2bb191bd84d9e9871b8280c4b15d945f02f11d937b0e1fb42b002b7f9e4"
+      },
+      {
+        "path": "backend/tests/test_bailian_acceptance.py",
+        "sha256": "6b132a9cc3e8e5bc031451ca00e919f3c11d8f633aa4bb55a83403ddc87fb539"
+      },
+      {
+        "path": "backend/tests/test_bailian_budget.py",
+        "sha256": "04b9e28a260d1b235e43a98fdc22fcc681e4316cab4f3f6f71a3c06aa40302e9"
+      },
+      {
+        "path": "backend/tests/test_bailian_settlement.py",
+        "sha256": "ec0a0cf3db9ca9ef9165c0829be4554faccad907d71db791e37c5ec62cf1f096"
+      },
+      {
+        "path": "backend/tests/test_business.py",
+        "sha256": "cf3d5e2ac33f87a93e14c25d7a31e4b97c91487bc87dd97c483fd2b837ee211c"
+      },
+      {
+        "path": "backend/tests/test_delivery.py",
+        "sha256": "165fa3d2a16a6d2e513082577bde4f505572ad9bfb44da812bcfc5392d51da5d"
+      },
+      {
+        "path": "backend/tests/test_evals.py",
+        "sha256": "e24f6c1cff3adcd7884aa30bb090284720997582b6273967dbe2badbac3db96a"
+      },
+      {
+        "path": "backend/tests/test_health.py",
+        "sha256": "c6421e56e330ae4fd8fdeebc1a99245a880b2982d2a7ba080a578f5c5fc5f500"
+      },
+      {
+        "path": "backend/tests/test_knowledge.py",
+        "sha256": "b20724750a768404b3f249936dcd885b73990055fb997640c97e49659aedb41b"
+      },
+      {
+        "path": "backend/tests/test_mcp.py",
+        "sha256": "5a1f5ae5d850644a967cf5c3d02653df38976fff724206957b7d37f746566780"
+      },
+      {
+        "path": "backend/tests/test_model_explanation.py",
+        "sha256": "79f2e54bc9792454bf84f5e24d0c4e2f6bb16f3f9f09711c3dd9fe579149ab28"
+      },
+      {
+        "path": "backend/tests/test_model_replay.py",
+        "sha256": "b0b44feac526378f52ff76eba9d9ad018b89131210b55c9ce643a289a60c7e17"
+      },
+      {
+        "path": "backend/tests/test_usage_settlement.py",
+        "sha256": "d9ebd71b7ed2525a00b008e854318be4ebbeb85e4619108cb395c94fcc8f4714"
+      },
+      {
+        "path": "backend/tests/test_workflow.py",
+        "sha256": "10b6530447baf7415db619b8b608ba57fa5542d1f2511709828bf1983dfda9b6"
+      },
+      {
+        "path": "docker-compose.yml",
+        "sha256": "df8e9371f7d411ffe59380cb0844c535d7556200490891f5c9eed783388142c8"
+      },
+      {
+        "path": "evals/__init__.py",
+        "sha256": "7d0a648f12163bc97985e2cde15a99a4254dd713c6394fed5cd246e1603d2af8"
+      },
+      {
+        "path": "evals/adversarial_cases.json",
+        "sha256": "c4c88848aa21f425494fef099bc65fe5061e751c9a9c4d590c9b566eb69e284d"
+      },
+      {
+        "path": "evals/bailian_budget.py",
+        "sha256": "e5ad9b702a4b4c35f53601684f2153d6c439271eb0776f763b82d85cb229ff1f"
+      },
+      {
+        "path": "evals/bailian_live.py",
+        "sha256": "1c91fb7e1f96810354d13a4d8d1d92add733d0bfca470407fa15684060ba8f99"
+      },
+      {
+        "path": "evals/golden_tasks.json",
+        "sha256": "dae40d9668ece8516462ddadf8cbdce9f2f5e1c5624e7ee1bf6a2c276844c69f"
+      },
+      {
+        "path": "evals/model_cases.json",
+        "sha256": "9c4e6cc98682e90b99131732733489f9b79333b784a652400c73aa9fcb95bb1a"
+      },
+      {
+        "path": "evals/model_replay.py",
+        "sha256": "004bb6cc57c0bdf6e0a99f7b4e1aa413f1edecde7590fbff5228866f28967f87"
+      },
+      {
+        "path": "evals/model_responses.json",
+        "sha256": "146a6bd0f81ba5b3ec02ce331d0d477dbfd4161dfde39f6b93062734bd9b93c1"
+      },
+      {
+        "path": "evals/runner.py",
+        "sha256": "056d3c7c59f51679121adf1a4fca43ed7bd0b3ad347a769ed17bcd7c09adba05"
+      },
+      {
+        "path": "evals/scorer.py",
+        "sha256": "08f42fdd3edad76bc4ad48a1b5dfb53033caa45c780d53c7e6ab803fb7271a23"
+      },
+      {
+        "path": "evals/server.py",
+        "sha256": "fc41533fa6b55da1526cc6688e2f1ec830f212154e7be47d55825f3c6d48cde6"
+      },
+      {
+        "path": "frontend/index.html",
+        "sha256": "8868aa19bb894de6bd67d0def5716b0aa7eebf3f366220d53949d29eb5e8a635"
+      },
+      {
+        "path": "frontend/package-lock.json",
+        "sha256": "b6b12bcfe5d6c50b4c4bf9b6079e6b1a7a8caf0b43d2d2575158efdaa9045a31"
+      },
+      {
+        "path": "frontend/package.json",
+        "sha256": "315bca74d9d57ab6c7de879057ae2d5ffb7188a8942f3b7521480373a67d1f68"
+      },
+      {
+        "path": "frontend/src/AgentQuery.tsx",
+        "sha256": "306df5e32a8df8c8574dae4fd0b5b14aee2e5ed49de1cda596a7aff357993c2e"
+      },
+      {
+        "path": "frontend/src/AnalysisMode.tsx",
+        "sha256": "f6e0db6665d507e5e4cf58f6537a41cc45bc2783221602e1aa48c7bb2706a436"
+      },
+      {
+        "path": "frontend/src/App.tsx",
+        "sha256": "c211721f5a42a722ec331a504273255bf7ca3f943e36e89754fea96158cce56b"
+      },
+      {
+        "path": "frontend/src/ApprovalQueue.tsx",
+        "sha256": "7d2d9e07e7e56ef883e4d7e62361c6a8c2b1c50ddfa3d1af43038514aed01a08"
+      },
+      {
+        "path": "frontend/src/BusinessQuery.tsx",
+        "sha256": "e37218932120c5da4cbcfde9a77859b77cd5b9732869c7a0fe0ea8ea315112fc"
+      },
+      {
+        "path": "frontend/src/DurableWorkflow.tsx",
+        "sha256": "91c6c5b6a21af1d19409eca913ff2d89fd8a45fb92f77be5a22c838e243b41d0"
+      },
+      {
+        "path": "frontend/src/Evaluation.tsx",
+        "sha256": "c630b974539d585fc07099e6915336b2cc19ea8b066b1f59edca43269a065b69"
+      },
+      {
+        "path": "frontend/src/KnowledgeQuery.tsx",
+        "sha256": "b351e0e19190e2af3e5e8cf97e416f8903b4d2d0d3fffcccc2768511ca207f1d"
+      },
+      {
+        "path": "frontend/src/ModelEvaluation.tsx",
+        "sha256": "b349a6a6e4621aaeff676b0c2fd15a3f3c1a84965b1a59e570d7e1b85fff8fff"
+      },
+      {
+        "path": "frontend/src/main.tsx",
+        "sha256": "afd44e2b31e71e708704cc815c5a0803b101403ea3252d1c818f96372e122c91"
+      },
+      {
+        "path": "frontend/src/style.css",
+        "sha256": "3227730194a96325986110984434ff4c551ee586680df81ef5a347aa78fb44f2"
+      },
+      {
+        "path": "frontend/tsconfig.json",
+        "sha256": "f8b423b41200feb5788529ca6820e1ced96025245672576262589fe9eb412605"
+      },
+      {
+        "path": "frontend/vite.config.ts",
+        "sha256": "7691a6f40e7aa490723925f312655160308f028874c1ac406cb723db89691a22"
+      },
+      {
+        "path": "mcp_server/__init__.py",
+        "sha256": "ed88c0d51faa5ab594f475cc7e192f094695598e3fa3f1f34dfd512330049f2c"
+      },
+      {
+        "path": "mcp_server/server.py",
+        "sha256": "ef9c0622b64292d88345998cc93db277bb9c15b6956cfcce045ff833012c71ca"
+      },
+      {
+        "path": "profiles/bailian-quota.example.json",
+        "sha256": "9bc2f2ba15a40dd4396a6c0a9d55dde1c6d61f0f93d945231d1890ee978adaae"
+      },
+      {
+        "path": "profiles/bailian.env.example",
+        "sha256": "628eb9cc94ee2807f82ee31140f3ca8882ac8ca0f5f9af4b026efb12a7da83bd"
+      },
+      {
+        "path": "sample_data/stage1.json",
+        "sha256": "0b89d75d2a92f3f15e0f8cf460949371ce66d02327a61d9e6f6b2495612b32ea"
+      },
+      {
+        "path": "scripts/demo_mcp.py",
+        "sha256": "406990fe2e584a0cfb653558dd1418fea9030832116a1b5a6ff792134a87c38c"
+      },
+      {
+        "path": "scripts/review_bailian_budget.py",
+        "sha256": "6998ef1b4c57d861d1cf950a7ae0179da75a982ab65cbda0cf2ced7b0cd867d5"
+      },
+      {
+        "path": "scripts/run_bailian_acceptance.py",
+        "sha256": "2a34a6fd4d8b53e56b4b8315e7bcc6c6944be5878e0e433f7778a30461cda9c3"
+      },
+      {
+        "path": "scripts/run_evals.py",
+        "sha256": "240fc7d8eabea8a42b3c7e7663304e0905b378b578647c48e6f7380857b2fe5b"
+      },
+      {
+        "path": "scripts/run_model_evals.py",
+        "sha256": "095f7e718a2157df18a486614135e7e533d1a40a7828c870bbf3cc476f705370"
+      },
+      {
+        "path": "scripts/settle_unused_reservations.py",
+        "sha256": "0b4580b71efd89dc2c4a20f2769c29906aa050e2a9e2ae8ba5a02730b5226852"
+      },
+      {
+        "path": "scripts/settle_verified_usage.py",
+        "sha256": "1d3d5fc4ae9917098ad5b957f15c10824f642bf94b58933bc3e5d7f620c2ab83"
+      },
+      {
+        "path": "scripts/smoke_demo.py",
+        "sha256": "9bc809750d258aff6a8cd0e48d5fd187ee808d30d7550d5106bc2cadbf985335"
+      },
+      {
+        "path": "scripts/stage1_demo.py",
+        "sha256": "3fce886e6cd7252257ef47bb733331d711d33ff59c2e58d92a2235873cbaaa23"
+      },
+      {
+        "path": "scripts/stage2_demo.py",
+        "sha256": "393c8d01fd17ecb4a75749aa3db333e8d1edb34530f3c659caced441f43b9678"
+      },
+      {
+        "path": "scripts/stage3_demo.py",
+        "sha256": "b53d2876dfa8e3d7eae35b9dbc55d59eb69839df1cd2bb28cfb925fc1ae0e243"
+      },
+      {
+        "path": "scripts/stage5_demo.py",
+        "sha256": "50d5a7dc603826fe6e52cebc4fd28c79b5dea5579a3e8d5852d9826b3a334c88"
+      },
+      {
+        "path": "scripts/stage6_demo.py",
+        "sha256": "b57893b3e8dd21f833cd3bd07c2e377ef254d7700c0d43a4243acc5c41fa4dfc"
+      },
+      {
+        "path": "scripts/stage8_demo.cjs",
+        "sha256": "55cf47be3f53e9bb1d67b463df5dc739bf8d1668aa712a9638bee99841f539c1"
+      },
+      {
+        "path": "scripts/verify_delivery.py",
+        "sha256": "c150749b7a6afcb76bc1bf0d03a3f91dece80edf2953d0e4a961019e781d6599"
+      },
+      {
+        "path": "scripts/verify_mysql.py",
+        "sha256": "8666c008a7ab6385887e4dd7dcba7c800145d815ca03e715434eafcd99202df8"
+      },
+      {
+        "path": "scripts/verify_stage5_mysql.py",
+        "sha256": "70c4d92b96e79ccfbb8082067a9e4e2bfe66ca866115a2234283e89d9d4af2a9"
+      }
+    ],
+    "recipe": "SHA256 of UTF-8 compact sorted-key JSON files array; tracked and unignored files, excluding Markdown, SHA256SUMS and docs/evidence/"
+  },
+  "original_live_source_sha256": "ecaac71d26aa15bb832beafe22a4caeef947bbaf37e0537b12e0ea9ee7c69403",
+  "changed_source_files_since_live": [
+    "backend/tests/test_adversarial_acceptance.py"
+  ],
+  "application_execution_files_unchanged": true,
+  "additional_live_requests": 0,
+  "original_415_test_local_run_preserved": true,
+  "full_local_delivery_repeated": false,
+  "final_cross_platform_result": "See final PR checks; not yet claimed here.",
+  "limitations": [
+    "Actual live execution remains bound to source 8347676 / original source SHA; it was not rerun after this test-only fix.",
+    "A non-UTF-8 CI fixture failure is not evidence of a model or production JSON reader failure."
+  ]
+}

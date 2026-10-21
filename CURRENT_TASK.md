@@ -13,3 +13,5 @@
 真实对抗：[real-adversarial-20261021.json](docs/evidence/real-adversarial-20261021.json)。离线回归：[adversarial-regression-20261021.json](docs/evidence/adversarial-regression-20261021.json)。[人工复核包](docs/STAGE9_REVIEW.md)继续保留四例待复核。四例旧正例仍对应此前源码，不拼成最新五例整轮通过。
 
 本轮已结束模型请求。下一步审阅本 PR 及依赖链，待维护者实际复核后记录四例人工结论。一次合成攻击安全完成不代表覆盖所有注入或真实供应商故障；受控传输故障仍属离线证据。Stage 9 人工复核未完成，Stage 10 未启动，不自动追加调用或合并 main。
+
+跨平台验证修正：首轮 CI #17 的 Ubuntu 通过，Windows 在新增测试读取中文题集时使用默认 cp1252 失败。现已仅将该测试模块的文本读写显式指定 UTF-8，不改应用代码 / 提示词 / 断言；开启默认编码告警并视为错误后，模块 25 项通过。原在线执行及本地 415 项报告仍绑定修复前源码，不重跑模型或将旧本地报告冒称新源码全量运行；最终跨平台状态以 PR 检查为准。证据见 [windows-encoding-fix-20261021.json](docs/evidence/windows-encoding-fix-20261021.json)。
