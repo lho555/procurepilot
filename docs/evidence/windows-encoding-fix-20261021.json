@@ -16,7 +16,7 @@
   "verification_command": "python -X warn_default_encoding -W error::EncodingWarning -m pytest backend/tests/test_adversarial_acceptance.py -q -o pythonpath=backend --basetemp=.local/adversarial-encoding-regression-20261021",
   "verification_result": "25 passed in 3.92s",
   "source": {
-    "commit": "85413ff141307051a518f4ed07d700b84f4cc1e6",
+    "commit": "b24d7b7f5fd47ef1c41354bf8297082220d7a6f8",
     "sha256": "d6c9f8901ded037091e9e36862f96a2c491015c313d8b7601215bb0ff079efa0",
     "files": [
       {
@@ -422,5 +422,6 @@
   "limitations": [
     "Actual live execution remains bound to source 8347676 / original source SHA; it was not rerun after this test-only fix.",
     "A non-UTF-8 CI fixture failure is not evidence of a model or production JSON reader failure."
-  ]
+  ],
+  "source_commit_role": "Test-fix commit containing the exact snapshot; focused verification occurred before this commit. No live execution is attributed to the fixed test snapshot."
 }
