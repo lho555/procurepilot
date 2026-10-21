@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ENDPOINT = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 MODEL = "qwen3.7-flash"
 CASE_IDS = ("shortage_and_delay", "shortage_only", "delay_only", "healthy_order")
+ADVERSARIAL_PROFILE = "policy_adversarial"
+ADVERSARIAL_IDS = ("policy_instruction_injection",)
 INPUT_CAP, OUTPUT_CAP = 991808, 1034  # documented output cap may overshoot 1024 by 10
 INPUT_RATE, OUTPUT_RATE = Decimal("1.2"), Decimal("4.8")
 PER_CALL = (INPUT_CAP * INPUT_RATE + OUTPUT_CAP * OUTPUT_RATE) / 1_000_000
@@ -40,17 +42,22 @@ def write_new(path, value):
         os.fsync(target.fileno())
 
 
-def cases(case_ids=None):
+def cases(case_ids=None, profile="positive"):
+    if profile not in {"positive", ADVERSARIAL_PROFILE}:
+        raise ValueError("Select a fixed acceptance profile")
+    allowed = CASE_IDS if profile == "positive" else ADVERSARIAL_IDS
     if case_ids is not None and type(case_ids) not in (list, tuple):
         raise ValueError("Select cases with an explicit list")
-    requested = CASE_IDS if case_ids is None else tuple(case_ids)
-    if (not requested or any(type(case_id) is not str or case_id not in CASE_IDS for case_id in requested)
+    requested = allowed if case_ids is None else tuple(case_ids)
+    if (not requested or any(type(case_id) is not str or case_id not in allowed for case_id in requested)
             or len(requested) != len(set(requested))):
         raise ValueError("Select unique fixed positive case IDs")
-    raw = (ROOT / "evals/model_cases.json").read_bytes()
+    filename = "model_cases.json" if profile == "positive" else "adversarial_cases.json"
+    raw = bounded_bytes(ROOT / "evals" / filename, 2 * 1024 * 1024)
     suite = Suite.model_validate_json(raw)
-    selected = [case for case in suite.cases if case.id in CASE_IDS]
-    if tuple(case.id for case in selected) != CASE_IDS or any(case.expected.outcome != "accepted" for case in selected):
+    selected = [case for case in suite.cases if case.id in allowed]
+    if (tuple(case.id for case in selected) != allowed or any(case.expected.outcome != "accepted" for case in selected)
+            or (profile == ADVERSARIAL_PROFILE and len(suite.cases) != 1)):
         raise ValueError("Live case contract changed")
     return [case for case in selected if case.id in requested], hashlib.sha256(raw).hexdigest()
 
@@ -320,13 +327,13 @@ def budget_review(specification):
             "unreserved_before_claim_cny": str(cap - prior), "can_claim": prior + proposed <= cap}
 
 
-def spec(budget, case_ids=None):
-    selected, case_hash = cases(case_ids)
+def spec(budget, case_ids=None, profile="positive"):
+    selected, case_hash = cases(case_ids, profile)
     reservation = PER_CALL * len(selected)
     if not budget.is_finite() or not reservation <= budget <= Decimal("12"):
         raise ValueError("Budget must cover selected cases and cannot exceed 12 CNY")
     adapter = ChatCompletionsAdapter(ENDPOINT, MODEL, "offline-placeholder", provider="bailian")
-    return {"provider": "bailian", "endpoint": ENDPOINT, "model": MODEL, "enable_thinking": False,
+    value = {"provider": "bailian", "endpoint": ENDPOINT, "model": MODEL, "enable_thinking": False,
             "approved_budget_cny": str(budget), "reserved_cny": str(reservation), "per_request_reserved_cny": str(PER_CALL),
             "maximum_requests": len(selected), "input_token_cap": INPUT_CAP, "output_token_reserve": OUTPUT_CAP,
             "input_cny_per_million": str(INPUT_RATE), "output_cny_per_million": str(OUTPUT_RATE),
@@ -334,15 +341,19 @@ def spec(budget, case_ids=None):
             "requests": [{"case_id": case.id, "body_sha256": digest(adapter.request_body(*case.inputs()))} for case in selected],
             "references": ["https://help.aliyun.com/zh/model-studio/qwen3-7-flash",
                            "https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions"]}
+    if profile == ADVERSARIAL_PROFILE:
+        value["profile"] = ADVERSARIAL_PROFILE
+    return value
 
 
-def prepare(budget, case_ids=None):
-    specification = spec(budget, case_ids)
+def prepare(budget, case_ids=None, profile="positive"):
+    specification = spec(budget, case_ids, profile)
     review = budget_review(specification)
     if not review["can_claim"] or os.path.lexists(ROOT / ".local/bailian-claim.lock"):
         raise ValueError("Budget or claim guard prevents a new plan")
     now = datetime.now(timezone.utc)
-    plan = {"schema_version": 2, "created_at": now.isoformat(), "expires_at": (now + timedelta(hours=24)).isoformat(),
+    plan = {"schema_version": 3 if profile == ADVERSARIAL_PROFILE else 2,
+            "created_at": now.isoformat(), "expires_at": (now + timedelta(hours=24)).isoformat(),
             "spec": specification, "budget_review": review}
     directory = ROOT / ".local/bailian-acceptance" / uuid4().hex
     directory.mkdir(parents=True)
@@ -360,13 +371,17 @@ def validate_plan(path):
         raise FileExistsError("Plan is already claimed")
     plan = json.loads(bounded_bytes(path, 100_000))
     if (set(plan) != {"schema_version", "created_at", "expires_at", "spec", "budget_review"}
-            or type(plan["schema_version"]) is not int or plan["schema_version"] != 2):
+            or type(plan["schema_version"]) is not int or plan["schema_version"] not in {2, 3}):
         raise ValueError("Invalid plan")
+    profile = plan["spec"].get("profile", "positive")
+    if ((plan["schema_version"] == 3 and profile != ADVERSARIAL_PROFILE)
+            or (plan["schema_version"] == 2 and "profile" in plan["spec"])):
+        raise ValueError("Plan version does not match its acceptance profile")
     created, expires = (datetime.fromisoformat(plan[key]) for key in ("created_at", "expires_at"))
     if not created <= datetime.now(timezone.utc) <= expires or expires - created != timedelta(hours=24):
         raise ValueError("Plan expired or invalid")
     selected = [request["case_id"] for request in plan["spec"]["requests"]]
-    if digest(plan["spec"]) != digest(spec(Decimal(plan["spec"]["approved_budget_cny"]), selected)):
+    if digest(plan["spec"]) != digest(spec(Decimal(plan["spec"]["approved_budget_cny"]), selected, profile)):
         raise ValueError("Plan, source or request fingerprint changed")
     review = budget_review(plan["spec"])
     if not review["can_claim"] or digest(plan["budget_review"]) != digest(review):
@@ -374,23 +389,26 @@ def validate_plan(path):
     return path, plan
 
 
-def preflight(path=None, budget=Decimal("12"), case_ids=None):
+def preflight(path=None, budget=Decimal("12"), case_ids=None, profile=None):
     """Read-only diagnostic; success is neither authorization nor a claim."""
     if path is None:
-        specification = spec(budget, case_ids)
+        specification = spec(budget, case_ids, profile or "positive")
         review = budget_review(specification)
     else:
-        if case_ids is not None:
-            raise ValueError("A frozen plan cannot change cases")
+        if case_ids is not None or profile is not None:
+            raise ValueError("A frozen plan cannot change cases or profile")
         _, plan = validate_plan(path)
         specification, review = plan["spec"], plan["budget_review"]
     locked = os.path.lexists(ROOT / ".local/bailian-claim.lock")
-    return {"mode": "offline_preflight", "passed": review["can_claim"] and not locked,
+    result = {"mode": "offline_preflight", "passed": review["can_claim"] and not locked,
             "reason": "claim_lock_present" if locked else None if review["can_claim"] else "budget_exceeded",
             "source_sha256": specification["source_sha256"], "budget_review": review,
             "selected_case_ids": [request["case_id"] for request in specification["requests"]],
             "maximum_requests": specification["maximum_requests"],
             "writes": False, "credential_reads": False, "live_model_requests": 0}
+    if "profile" in specification:
+        result["profile"] = specification["profile"]
+    return result
 
 
 @contextmanager
@@ -465,7 +483,7 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
         adapter = adapter_factory(ENDPOINT, MODEL, key, provider="bailian")
         phase = "prepare_request"
         selected = [request["case_id"] for request in specification["requests"]]
-        for case, request in zip(cases(selected)[0], specification["requests"], strict=True):
+        for case, request in zip(cases(selected, specification.get("profile", "positive"))[0], specification["requests"], strict=True):
             phase, case_id = "prepare_request", case.id
             if digest(adapter.request_body(*case.inputs())) != request["body_sha256"]:
                 raise ValueError("Request changed")
@@ -508,6 +526,14 @@ async def execute(path, key_loader, adapter_factory=ChatCompletionsAdapter):
               "quality_scope": "Explicitly selected fixed synthetic positive cases only; failure scenarios remain offline; not full-suite, human-reviewed correctness or production acceptance.",
               "case_sha256": specification["case_sha256"], "source_sha256": specification["source_sha256"],
               "plan_sha256": digest(plan), "observations": observations, "finished_at": datetime.now(timezone.utc).isoformat()}
+    if specification.get("profile") == ADVERSARIAL_PROFILE:
+        guard = bool(failure and failure["phase"] == "model_request" and failure["category"] == "output_contract")
+        quality = all(item["label_checks"]["passed"] for item in observations) if complete else False if guard else None
+        report.update(profile=ADVERSARIAL_PROFILE,
+                      adversarial_assessment={"outcome": "safe_completion" if passed else "guard_rejected" if guard
+                                              else "model_quality_failed" if quality is False else "inconclusive",
+                                              "application_guard_rejected": guard, "model_following_passed": quality},
+                      quality_scope="One fixed synthetic instruction-injection input; no business writes or tools. Guard rejection is not model quality success; not comprehensive or human-reviewed safety.")
     write_new(directory / "live-report.json", report)
     return report
 
@@ -521,10 +547,13 @@ def main(argv=None):
     parser.add_argument("--confirm-local", action="store_true")
     parser.add_argument("--confirm-live", action="store_true")
     parser.add_argument("--budget-cny", default="12")
-    parser.add_argument("--case", action="append", dest="case_ids", help="Select a fixed positive case; repeat to select more. Default: all four")
+    parser.add_argument("--case", action="append", dest="case_ids", help="Select fixed cases in the chosen profile. Default profile: four positives")
+    parser.add_argument("--profile", choices=["positive", ADVERSARIAL_PROFILE], help="Fixed case profile for candidate preflight or preparation only")
     parser.add_argument("--credential-file", type=Path)
     parser.add_argument("--credential-name")
     args = parser.parse_args(argv)
+    if args.profile is not None and (args.execute is not None or args.preflight):
+        parser.error("A frozen plan cannot override its profile")
     if args.case_ids is not None and (args.execute is not None or args.preflight):
         parser.error("--case is only allowed with --prepare or --preflight without a frozen plan")
     if args.prepare and not args.confirm_local:
@@ -533,15 +562,18 @@ def main(argv=None):
         parser.error("Live execution requires --confirm-live and an explicitly named credential file/assignment")
     try:
         if args.preflight is not None:
-            report = preflight(Path(args.preflight) if args.preflight else None, Decimal(args.budget_cny), args.case_ids)
+            report = preflight(Path(args.preflight) if args.preflight else None, Decimal(args.budget_cny), args.case_ids, args.profile)
             print(json.dumps(report, ensure_ascii=False))
             return 0 if report["passed"] else 1
         if args.prepare:
-            path, plan = prepare(Decimal(args.budget_cny), args.case_ids)
+            path, plan = prepare(Decimal(args.budget_cny), args.case_ids, args.profile or "positive")
             print(json.dumps({"plan": path.relative_to(ROOT).as_posix(), "spec": plan["spec"], "budget_review": plan["budget_review"]}, ensure_ascii=False))
             return 0
         report = asyncio.run(execute(args.execute, lambda: read_credential(args.credential_file, args.credential_name)))
-        print(json.dumps({key: report[key] for key in ("passed", "status", "failure", "selected_case_ids", "planned_requests", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}))
+        summary = {key: report[key] for key in ("passed", "status", "failure", "selected_case_ids", "planned_requests", "request_attempts", "validated_responses", "reserved_cny", "cost_estimate_upper_cny")}
+        if "profile" in report:
+            summary.update(profile=report["profile"], adversarial_assessment=report["adversarial_assessment"])
+        print(json.dumps(summary))
         return 0 if report["passed"] else 1
     except Exception:
         parser.exit(2, "Acceptance refused: invalid/expired/changed/used plan, cumulative budget, busy guard or local input. No automatic retry.\n")
