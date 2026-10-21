@@ -1,2 +1,3 @@
 /evals/model_cases.json text eol=lf
 /evals/model_responses.json text eol=lf
+/evals/adversarial_cases.json text eol=lf
