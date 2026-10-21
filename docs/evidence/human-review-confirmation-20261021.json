@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "maintainer_human_review_confirmation",
+  "recorded_at_utc": "2026-10-21T04:51:22.676562+00:00",
+  "actual_review_time_reported": null,
+  "confirmation_source": "explicit_user_message",
+  "reviewer_role": "project_maintainer",
+  "statement": "四个样例的人工复核都已确认并通过",
+  "status": "passed",
+  "review_scope": [
+    "facts",
+    "citation_applicability",
+    "recommendation_suitability"
+  ],
+  "cases": [
+    {
+      "case_id": "shortage_and_delay",
+      "human_result": "passed"
+    },
+    {
+      "case_id": "shortage_only",
+      "human_result": "passed"
+    },
+    {
+      "case_id": "delay_only",
+      "human_result": "passed"
+    },
+    {
+      "case_id": "healthy_order",
+      "human_result": "passed"
+    }
+  ],
+  "reviewed_packet": {
+    "path": "docs/STAGE9_REVIEW.md",
+    "commit": "30f6cdfa059dc6a5635383a98fffe3f65a4925c5",
+    "sha256": "948ee5fc5ab7d0dbf686449c0fd53e8084bb0b60e1813778ec410b39555702de",
+    "display_type": "Reconstructed from verified selections using fixed application text; raw model response was not retained."
+  },
+  "reviewed_live_evidence": {
+    "path": "docs/evidence/latest-four-case-20261021.json",
+    "file_sha256": "0bd76f89481da21f00a433fda1bf65d91955f15615a7b94d075fb41053b18b00",
+    "plan_id": "61ffc9d582f346fdb3bd23745a0d1104",
+    "report_sha256": "57ce9f0e96bb58648fa58eeeadb46133cf23ed31803140a854ad175a0b9c8ccb",
+    "execution_commit": "d756d0585f9225b7cd11fc1980e32b790dec4772",
+    "source_sha256": "caf18aae347e3a07e04ee435224d92ad8649672d8a8eafb0a7eaee1091501447"
+  },
+  "prior_human_status": "deferred_by_user",
+  "supersedes_four_case_deferral": true,
+  "historical_evidence_rewritten": false,
+  "verification_activity": {
+    "new_model_requests": 0,
+    "credential_reads": false,
+    "budget_or_approval_permissions_changed": false
+  },
+  "scope_limit": "Four fixed synthetic positive-case samples confirmed by the maintainer. Does not establish external expert validation, production certification, adversarial-case human review or a combined latest-source five-case run."
+}
